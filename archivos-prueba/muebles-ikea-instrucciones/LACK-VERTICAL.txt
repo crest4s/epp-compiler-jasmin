@@ -1,0 +1,5 @@
+ITEM:LACK_VERTICAL
+1-Unir pieza lateral y 6 piezas balda; Con llave_allen, atornillar 12 tornillos 104323 en pieza lateral.
+2-Colocar pieza balda_inferior en pieza lateral; Con destornillador, atornillar 2 tornillos 104323 y placa_metal en pieza balda_inferior.
+3-Fijar en pared; Nivelar; Marcar con lápiz en pieza mueble en superior; Con destornillador, atornillar tornillo 104323 en pieza mueble.
+FIN

@@ -1,0 +1,16 @@
+ITEM:BILLY
+1-Insertar 16 espigas 101531 en pieza embellecedor y 3 piezas balda.
+2-Con destornillador, atornillar 12 tornillos 118331 en 2 piezas lateral.
+3-Unir pieza embellecedor y pieza lateral; Unir 2 piezas balda y pieza lateral.
+4-Con destornillador, atornillar 3 tornillos 119081 en 2 piezas balda.
+5-Unir pieza lateral y pieza balda; Con destornillador, atornillar 2 tornillos 119081 en pieza balda.
+6-Unir pieza lateral y 3 piezas balda y pieza embellecedor.
+7-Con destornillador, atornillar 6 tornillos 119081 en 3 piezas balda.
+8-Marcar con lapiz en pieza balda_central.
+9-Desplegar pieza trasera; Deslizar pieza trasera en ranuras.
+10-Marcar con lápiz en pieza trasera en centro.
+11-Con martillo, clavar 18 clavos 101201 en pieza trasera en centro y pieza trasera en bordes.
+12-Fijar en pared; Con destornillador, atornillar 2 tornillos 106989, 2 arandelas 100823 y 2 escuadras 101113; Con destornillador, atornillar 2 tornillos 109041 y 2 arandelas 100823 en pieza balda_superior. 
+13-Colocar 16 soportes 117272 en 2 piezas lateral.
+14-Colocar 4 piezas baldas_moviles en soportes.
+FIN

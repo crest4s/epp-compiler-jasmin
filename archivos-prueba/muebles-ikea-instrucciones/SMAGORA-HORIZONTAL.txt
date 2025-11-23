@@ -1,0 +1,13 @@
+ITEM:SMAGORA_HORIZONTAL
+1-Con destornillador, atornillar 16 tornillo 119371 en pieza base y pieza superior.
+2-Insertar 8 espiga 101354 en 2 pieza lateral; Unir pieza base y 2 pieza lateral.
+3-Repetir(2).
+4-Con destornillador, atornillar 8 tornillo 119252 en 4 pieza lateral en inferior.
+5-Deslizar pieza panel_trasero en ranuras.
+6-Unir pieza superior y pieza mueble.
+7-Con destornillador, atornillar 8 tornillo 119252 en 4 pieza lateral en superior.
+8-Con destornillador, atornillar 2 tornillo 107716 y 2 escuadra 115763 en 2 pieza lateral.
+9-Nivelar; Fijar en pared; Marcar con lápiz en pared.
+10-Con destornillador, atornillar 2 tornillo 110646 en pared.
+11-Colocar 2 placas_metal 123456 y 2 embellecedor 888888 en pieza mueble en superior.
+FIN
