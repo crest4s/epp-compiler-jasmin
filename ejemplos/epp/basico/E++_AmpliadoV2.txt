@@ -1,0 +1,420 @@
+# ========================================
+# E++ - Archivo de Prueba Ampliado V2
+# Prueba completa de la gramática E++
+# ========================================
+
+# ----------------------------------------
+# SECCIÓN 1: Asignaciones básicas
+# ----------------------------------------
+# Variables con números enteros
+asignar x = 10;P
+asignar y = 20;P
+asignar z = 0;P
+
+# Variables con números decimales
+asignar precio = 99.99;P
+asignar temperatura = -15.5;P
+
+# Asignación con strings
+asignar nombre = "GitHub Copilot";P
+asignar mensaje = "Hola, mundo!";P
+
+# Asignación con booleanos
+asignar activo = verdadero;P
+asignar completo = falso;P
+
+# ----------------------------------------
+# SECCIÓN 2: Operaciones aritméticas
+# ----------------------------------------
+# Suma y resta
+asignar suma = 5 + 3;P
+asignar resta = 10 - 4;P
+asignar operacion = x + y - 5;P
+
+# Multiplicación, división y módulo
+asignar multiplicacion = 7 * 8;P
+asignar division = 100 / 4;P
+asignar modulo = 17 % 5;P
+
+# Expresiones con paréntesis
+asignar resultado = (10 + 5) * 2;P
+asignar complejo = ((x + y) * 3) / (z + 1);P
+
+# Operaciones con decimales
+asignar area = 3.14 * 5.0 * 5.0;P
+
+# ----------------------------------------
+# SECCIÓN 3: Instrucción mostrar
+# ----------------------------------------
+# Mostrar valores literales
+mostrar 42;P
+mostrar 3.14;P
+mostrar "Bienvenido al lenguaje E++";P
+mostrar verdadero;P
+
+# Mostrar variables
+mostrar x;P
+mostrar nombre;P
+mostrar activo;P
+
+# Mostrar expresiones aritméticas
+mostrar 10 + 20;P
+mostrar x * y;P
+mostrar (x + y) / 2;P
+
+# Mostrar expresiones de comparación
+mostrar x == y;P
+mostrar precio > 50.0;P
+mostrar temperatura < 0.0;P
+
+# ----------------------------------------
+# SECCIÓN 4: Instrucción leer
+# ----------------------------------------
+# Leer valores en variables
+leer edad;P
+leer peso;P
+leer ciudad;P
+
+# ----------------------------------------
+# SECCIÓN 5: Condicionales simples
+# ----------------------------------------
+# Condicional con solo bloque 'si'
+x > 5 ???
+si ->
+  mostrar "x es mayor que 5";P
+terminar
+
+# Condicional con bloques 'si' y 'no'
+y == 20 ???
+si ->
+  mostrar "y es igual a 20";P
+  asignar z = y * 2;P
+no ->
+  mostrar "y no es igual a 20";P
+  asignar z = 0;P
+terminar
+
+# Condicional con comparación de strings
+nombre == "GitHub Copilot" ???
+si ->
+  mostrar "Nombre correcto";P
+no ->
+  mostrar "Nombre incorrecto";P
+terminar
+
+# Condicional con booleano literal
+verdadero ???
+si ->
+  mostrar "Esto siempre se ejecuta";P
+terminar
+
+# ----------------------------------------
+# SECCIÓN 6: Condicionales con operadores lógicos
+# ----------------------------------------
+# Operador AND
+x > 5 AND y < 30 ???
+si ->
+  mostrar "x es mayor que 5 AND y es menor que 30";P
+terminar
+
+# Operador OR
+x == 10 OR y == 10 ???
+si ->
+  mostrar "x o y es igual a 10";P
+terminar
+
+# Operador NOT
+NOT x == 0 ???
+si ->
+  mostrar "x no es cero";P
+terminar
+
+# Operadores combinados
+(x > 5 AND y > 15) OR z == 0 ???
+si ->
+  mostrar "Condición compleja cumplida";P
+no ->
+  mostrar "Condición compleja no cumplida";P
+terminar
+
+# Negación con paréntesis
+NOT (x == y) ???
+si ->
+  mostrar "x y y son diferentes";P
+terminar
+
+# ----------------------------------------
+# SECCIÓN 7: Bucles mientras
+# ----------------------------------------
+# Bucle simple con comparación
+asignar contador = 0;P
+mientras (contador < 5) ->
+  mostrar contador;P
+  asignar contador = contador + 1;P
+terminar
+
+# Bucle con operadores lógicos
+asignar i = 0;P
+asignar j = 10;P
+mientras (i < 5 AND j > 5) ->
+  mostrar i;P
+  mostrar j;P
+  asignar i = i + 1;P
+  asignar j = j - 1;P
+terminar
+
+# Bucle con negación
+asignar activo = verdadero;P
+asignar intentos = 0;P
+mientras (NOT activo == falso) ->
+  asignar intentos = intentos + 1;P
+  mostrar intentos;P
+  intentos > 3 ???
+  si ->
+    asignar activo = falso;P
+  terminar
+terminar
+
+# Bucle con expresión compleja
+asignar a = 1;P
+asignar b = 10;P
+mientras ((a < 5 OR b > 8) AND NOT a == b) ->
+  mostrar a;P
+  mostrar b;P
+  asignar a = a + 1;P
+  asignar b = b - 1;P
+terminar
+
+# ----------------------------------------
+# SECCIÓN 8: Condicionales anidados
+# ----------------------------------------
+asignar num = 15;P
+num > 10 ???
+si ->
+  mostrar "num es mayor que 10";P
+  num < 20 ???
+  si ->
+    mostrar "num está entre 10 y 20";P
+  no ->
+    mostrar "num es mayor o igual a 20";P
+  terminar
+no ->
+  mostrar "num es menor o igual a 10";P
+terminar
+
+# ----------------------------------------
+# SECCIÓN 9: Bucles anidados
+# ----------------------------------------
+asignar fila = 0;P
+mientras (fila < 3) ->
+  asignar columna = 0;P
+  mientras (columna < 3) ->
+    mostrar "Fila: ";P
+    mostrar fila;P
+    mostrar " Columna: ";P
+    mostrar columna;P
+    asignar columna = columna + 1;P
+  terminar
+  asignar fila = fila + 1;P
+terminar
+
+# ----------------------------------------
+# SECCIÓN 10: Combinaciones complejas
+# ----------------------------------------
+# Condicional dentro de bucle
+asignar n = 0;P
+mientras (n < 10) ->
+  n % 2 == 0 ???
+  si ->
+    mostrar "n es par: ";P
+    mostrar n;P
+  no ->
+    mostrar "n es impar: ";P
+    mostrar n;P
+  terminar
+  asignar n = n + 1;P
+terminar
+
+# Bucle dentro de condicional
+asignar ejecutar = verdadero;P
+ejecutar == verdadero ???
+si ->
+  asignar k = 0;P
+  mientras (k < 3) ->
+    mostrar "Iteración: ";P
+    mostrar k;P
+    asignar k = k + 1;P
+  terminar
+terminar
+
+# ----------------------------------------
+# SECCIÓN 11: Comparaciones de todos los tipos
+# ----------------------------------------
+# Mayor que
+asignar test1 = 10 > 5;P
+mostrar test1;P
+
+# Menor que
+asignar test2 = 3 < 8;P
+mostrar test2;P
+
+# Igual
+asignar test3 = 7 == 7;P
+mostrar test3;P
+
+# Diferente
+asignar test4 = 5 != 9;P
+mostrar test4;P
+
+# Mayor o igual
+asignar test5 = 10 >= 10;P
+mostrar test5;P
+
+# Menor o igual
+asignar test6 = 4 <= 6;P
+mostrar test6;P
+
+# Comparaciones con strings
+asignar textoIgual = "hola" == "hola";P
+asignar textoDiferente = "hola" != "adios";P
+
+# ----------------------------------------
+# SECCIÓN 12: Expresiones con variables
+# ----------------------------------------
+asignar var1 = 100;P
+asignar var2 = 50;P
+asignar var3 = var1 + var2;P
+asignar var4 = var1 - var2;P
+asignar var5 = var1 * var2;P
+asignar var6 = var1 / var2;P
+asignar var7 = var1 % var2;P
+
+mostrar var3;P
+mostrar var4;P
+mostrar var5;P
+mostrar var6;P
+mostrar var7;P
+
+# ----------------------------------------
+# SECCIÓN 13: Bucles para (FOR)
+# ----------------------------------------
+# Bucle para básico con paso explícito
+para i desde 0 hasta 5 paso 1 ->
+  mostrar i;P
+terminar
+
+# Bucle para sin paso (por defecto 1)
+para contador desde 1 hasta 10 ->
+  mostrar contador;P
+terminar
+
+# Bucle para con paso de 2
+para par desde 0 hasta 10 paso 2 ->
+  mostrar "Número par: ";P
+  mostrar par;P
+terminar
+
+# Bucle para con expresiones
+asignar inicio = 5;P
+asignar fin = 15;P
+asignar incremento = 3;P
+para j desde inicio hasta fin paso incremento ->
+  mostrar j;P
+terminar
+
+# Bucle para anidado
+para fila desde 1 hasta 3 paso 1 ->
+  para columna desde 1 hasta 3 paso 1 ->
+    mostrar "Fila: ";P
+    mostrar fila;P
+    mostrar " Columna: ";P
+    mostrar columna;P
+  terminar
+terminar
+
+# Bucle para con operaciones dentro
+asignar total = 0;P
+para idx desde 1 hasta 5 paso 1 ->
+  asignar total = total + idx;P
+terminar
+mostrar "Total: ";P
+mostrar total;P
+
+# Bucle para con condicionales
+para num desde 1 hasta 20 paso 1 ->
+  num % 2 == 0 ???
+  si ->
+    mostrar "Par: ";P
+    mostrar num;P
+  no ->
+    mostrar "Impar: ";P
+    mostrar num;P
+  terminar
+terminar
+
+# Bucle para con paso negativo (decremento)
+para dec desde 10 hasta 1 paso -1 ->
+  mostrar dec;P
+terminar
+
+# ----------------------------------------
+# SECCIÓN 14: Bloques vacíos (válidos)
+# ----------------------------------------
+falso ???
+si ->
+no ->
+terminar
+
+mientras (falso) ->
+terminar
+
+para vacio desde 1 hasta 0 paso 1 ->
+terminar
+
+# ----------------------------------------
+# SECCIÓN 15: Comentarios en diferentes lugares
+# ----------------------------------------
+# Comentario antes de asignación
+asignar valor = 42;P # Comentario después de instrucción
+
+# Comentario antes de condicional
+valor > 0 ???
+si ->
+  # Comentario dentro del bloque si
+  mostrar valor;P
+no ->
+  # Comentario dentro del bloque no
+  mostrar "Negativo";P
+terminar
+
+# Comentario antes de bucle para
+# Este bucle muestra números del 1 al 3
+para m desde 1 hasta 3 paso 1 ->
+  # Comentario dentro del bucle
+  mostrar m;P
+terminar
+
+# ----------------------------------------
+# SECCIÓN 16: Expresiones complejas finales
+# ----------------------------------------
+asignar final1 = ((10 + 20) * (30 - 15)) / 5;P
+asignar final2 = (100 % 7) + (50 / 2) - (3 * 4);P
+asignar final3 = x + y * z - (precio / 10.0);P
+
+mostrar final1;P
+mostrar final2;P
+mostrar final3;P
+
+# Comparación compleja en condicional
+((x > 5 AND y < 25) OR (z == 0 AND final1 > 100)) AND NOT (activo == falso) ???
+si ->
+  mostrar "Condición extremadamente compleja cumplida";P
+  asignar resultado = verdadero;P
+no ->
+  mostrar "Condición no cumplida";P
+  asignar resultado = falso;P
+terminar
+
+# ========================================
+# FIN DEL ARCHIVO DE PRUEBA E++
+# ========================================
