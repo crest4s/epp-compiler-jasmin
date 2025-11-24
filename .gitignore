@@ -1,7 +1,13 @@
-# Compiled class file
+# ============================================
+# .gitignore para compiladores-pl3
+# Proyecto ANTLR4 + Java + Maven
+# ============================================
+
+# -------------------- Java --------------------
+# Compiled class files
 *.class
 
-# Log file
+# Log files
 *.log
 
 # BlueJ files
@@ -10,15 +16,92 @@
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
 
-# Package Files #
+# Package Files
 *.jar
+!Jasmin/**/jasmin.jar
 *.war
 *.nar
 *.ear
 *.zip
+!Jasmin/**/*.zip
 *.tar.gz
 *.rar
 
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+# Virtual machine crash logs
 hs_err_pid*
 replay_pid*
+
+# -------------------- Maven --------------------
+# Maven target directory
+maven-project/target/
+**/target/
+
+# Maven wrapper
+.mvn/wrapper/maven-wrapper.jar
+.mvn/wrapper/maven-wrapper.properties
+
+# -------------------- ANTLR4 --------------------
+# Generated ANTLR files (mantener gen/ si se quiere versionar)
+# Descomentar si NO se quiere versionar los archivos generados:
+# maven-project/gen/
+# **/*Lexer.java
+# **/*Parser.java
+# **/*Listener.java
+# **/*Visitor.java
+# **/*BaseListener.java
+# **/*BaseVisitor.java
+# *.tokens
+# *.interp
+
+# -------------------- IDE --------------------
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# Eclipse
+.classpath
+.project
+.settings/
+bin/
+
+# NetBeans
+nbproject/
+build/
+nbbuild/
+dist/
+nbdist/
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# -------------------- Sistema Operativo --------------------
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+.directory
+.Trash-*
+
+# -------------------- Otros --------------------
+# Archivos temporales
+*.tmp
+*.bak
+*.swp
+*~.nib
+
+# Archivos de configuración local
+local.properties

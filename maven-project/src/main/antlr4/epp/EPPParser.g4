@@ -20,14 +20,16 @@ programa
 /*
  * Regla que define las posibles instrucciones en el programa.
  * Las instrucciones pueden ser asignaciones, mostrar valores,
- * condicionales, leer valores o bucles mientras.
+ * condicionales, leer valores, bucles mientras o bucles para.
  */
 instruccion
     : asignacion
+    | asignacionSimple
     | mostrar
     | condicional
     | leer
     | mientras
+    | para
     ;
 
 /*
@@ -37,6 +39,15 @@ instruccion
  */
 asignacion
     : ASIGNAR VARIABLE ASIGNACION expresion FINLINEA
+    ;
+
+/*
+ * Regla para la asignación simple (sin palabra clave 'asignar').
+ * Permite asignar un valor directamente a una variable.
+ * Ejemplo: x = 5;P
+ */
+asignacionSimple
+    : VARIABLE ASIGNACION expresion FINLINEA
     ;
 
 /*
@@ -68,6 +79,20 @@ leer
  */
 mientras
     : MIENTRAS PARENIZQ expresionBooleana PARENDER FLECHA bloque TERMINAR
+    ;
+
+/*
+ * Regla para la instrucción para (bucle FOR).
+ * Define un bucle con variable de control, valor inicial, final y paso.
+ * Ejemplo:
+ * para i desde 0 hasta 10 paso 1 ->
+ *   mostrar i;P
+ * terminar
+ * 
+ * El paso es opcional, por defecto es 1.
+ */
+para
+    : PARA VARIABLE DESDE expresionAritmetica HASTA expresionAritmetica (PASO expresionAritmetica)? FLECHA bloque TERMINAR
     ;
 
 /*
@@ -116,8 +141,8 @@ comentario
  * Regla para expresiones booleanas.
  * Solo para usar en condicionales y bucles.
  * Permite:
- * - Operadores lógicos: y, o
- * - Negación: no_es
+ * - Operadores lógicos: AND, OR
+ * - Negación: NOT
  * - Comparaciones entre expresiones aritméticas (números)
  * - Comparaciones entre strings
  * - Comparaciones entre variables
@@ -138,11 +163,15 @@ expresionBooleana
  * Expresiones que se pueden comparar:
  * - Expresiones aritméticas (números)
  * - Strings
+ * - Booleanos
  * - Variables (pueden contener cualquier tipo)
  */
 expresionComparable
     : expresionAritmetica  # ExprCompAritmetica
     | STRING               # ExprCompString
+    | VERDADERO            # ExprCompVerdadero
+    | FALSO                # ExprCompFalso
+    | VARIABLE             # ExprCompVariable
     ;
 
 /*
@@ -177,6 +206,7 @@ expresionAritmetica
 expresionAritmeticaPrimaria
     : VARIABLE                                    # ExprAritVariable
     | NUM                                         # ExprAritNumero
+    | MENOS NUM                                   # ExprAritNumeroNegativo
     | PARENIZQ expresionAritmetica PARENDER       # ExprAritParentesis
     ;
 
@@ -187,6 +217,7 @@ expresionAritmeticaPrimaria
 expresionPrimaria
     : VARIABLE                                    # ExprVariable
     | NUM                                         # ExprNumero
+    | MENOS NUM                                   # ExprNumeroNegativo
     | STRING                                      # ExprTexto
     | VERDADERO                                   # ExprBooleanoVerdadero
     | FALSO                                       # ExprBooleanoFalso

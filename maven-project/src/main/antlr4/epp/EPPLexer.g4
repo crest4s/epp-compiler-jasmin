@@ -12,6 +12,10 @@ ASIGNAR   : 'asignar';
 MOSTRAR   : 'mostrar';
 LEER      : 'leer';
 MIENTRAS  : 'mientras';
+PARA      : 'para';
+DESDE     : 'desde';
+HASTA     : 'hasta';
+PASO      : 'paso';
 SI        : 'si';
 NO        : 'no';
 TERMINAR  : 'terminar';
@@ -35,9 +39,9 @@ CONDICION : '???';
 FINLINEA  : ';P';
 
 // Operadores lógicos
-Y_LOGICO  : 'y';
-O_LOGICO  : 'o';
-NO_LOGICO : 'no_es';
+Y_LOGICO  : 'AND';
+O_LOGICO  : 'OR';
+NO_LOGICO : 'NOT';
 
 // Operadores
 MAS        : '+';
