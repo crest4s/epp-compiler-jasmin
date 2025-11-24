@@ -32,9 +32,9 @@ hs_err_pid*
 replay_pid*
 
 # -------------------- Maven --------------------
-# Maven target directory
+# Maven target directory (solo en maven-project)
 maven-project/target/
-**/target/
+maven-project/.mvn/wrapper/
 
 # Maven wrapper
 .mvn/wrapper/maven-wrapper.jar
@@ -54,12 +54,12 @@ maven-project/target/
 # *.interp
 
 # -------------------- IDE --------------------
-# IntelliJ IDEA
-.idea/
-*.iml
-*.iws
-*.ipr
-out/
+# IntelliJ IDEA (solo en maven-project)
+maven-project/.idea/
+maven-project/*.iml
+maven-project/*.iws
+maven-project/*.ipr
+maven-project/out/
 
 # Eclipse
 .classpath
