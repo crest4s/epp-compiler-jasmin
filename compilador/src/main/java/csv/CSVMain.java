@@ -1,6 +1,5 @@
 package csv;
 
-import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -10,65 +9,58 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.charset.StandardCharsets;
-import java.util.Scanner; // Clase necesaria para la entrada por consola
+import java.util.Scanner;
 
+/**
+ * Programa principal para convertir archivos CSV a formato JSON.
+ * Pide la ruta del archivo CSV al usuario y genera el JSON automáticamente
+ * con el mismo nombre base + "_salida.json".
+ */
 public class CSVMain {
 
     public static void main(String[] args) {
-        String inputPath;
-        String outputPath;
-
-        try (Scanner scanner = new Scanner(System.in)) {
-            // 1. Solicitar la ruta del archivo de entrada CSV
-            System.out.print("Introduce la ruta del archivo de entrada CSV: ");
-            inputPath = scanner.nextLine();
-
-            // 2. Solicitar la ruta del archivo de salida JSON/TXT
-            System.out.print("Introduce la ruta del archivo de salida (donde se guardará el JSON): ");
-            outputPath = scanner.nextLine();
-        } catch (Exception e) {
-            System.err.println("Error al leer la entrada del usuario: " + e.getMessage());
-            return;
-        }
-
-        System.out.println("\nIniciando análisis...");
-        System.out.println("Fuente CSV: " + inputPath);
+        Scanner scanner = new Scanner(System.in);
+        
+        System.out.print("Introduce la ruta del archivo CSV: ");
+        String inputPath = scanner.nextLine().trim();
+        
+        scanner.close();
 
         try {
-            // 3. Análisis ANTLR (Lexer, Parser, Visitor)
-
-            // Verifica si el archivo de entrada existe antes de intentar leerlo
-            Path inFile = Paths.get(inputPath);
-            if (!Files.exists(inFile)) {
-                System.err.println("\nError: el archivo de entrada no existe en la ruta especificada.");
-                return;
+            Path inputFile = Paths.get(inputPath);
+            if (!Files.exists(inputFile)) {
+                System.err.println("Error: Archivo no encontrado: " + inputPath);
+                System.exit(1);
             }
 
-            GeneradorAST generador = new GeneradorAST();
-            ParseTree tree = generador.generadorAST(inFile);
+            // Generar ruta de salida: mismo directorio, nombre_salida.json
+            String fileName = inputFile.getFileName().toString();
+            String baseName = fileName.contains(".") ? 
+                fileName.substring(0, fileName.lastIndexOf('.')) : fileName;
+            Path outputFile = inputFile.getParent().resolve(baseName + "_salida.json");
 
-            // Crea y ejecuta el Visitor para la traducción a JSON
+            // Pipeline de análisis
+            CSVLexer lexer = new CSVLexer(CharStreams.fromPath(inputFile));
+            CSVParser parser = new CSVParser(new CommonTokenStream(lexer));
+            ParseTree tree = parser.csv();
+
             CSVToJsonVisitor visitor = new CSVToJsonVisitor();
-            String jsonResult = (String) visitor.visit(tree);
+            String json = visitor.visit(tree);
 
-            // 4. Guardar el resultado en el archivo de salida
-            Path outFile = Paths.get(outputPath);
+            Files.createDirectories(outputFile.getParent());
+            Files.writeString(outputFile, json, StandardCharsets.UTF_8);
 
-            // Asegura que el directorio de salida exista
-            Files.createDirectories(outFile.getParent());
-
-            // Escribe el contenido JSON en el archivo
-            Files.write(outFile, jsonResult.getBytes(StandardCharsets.UTF_8));
-
-            System.out.println("\nTraducción finalizada.");
-            System.out.println("Resultado JSON guardado en: " + outputPath);
+            System.out.println("\n✓ CSV → JSON completado");
+            System.out.println("  Entrada: " + inputPath);
+            System.out.println("  Salida: " + outputFile);
 
         } catch (IOException e) {
-            System.err.println("\nError de E/S (Entrada/Salida): " + e.getMessage());
-            System.err.println("Verifique las rutas de archivo.");
+            System.err.println("Error de I/O: " + e.getMessage());
+            System.exit(1);
         } catch (Exception e) {
-            System.err.println("\nError durante el análisis o la generación del JSON.");
+            System.err.println("Error: " + e.getMessage());
             e.printStackTrace();
+            System.exit(1);
         }
     }
 }

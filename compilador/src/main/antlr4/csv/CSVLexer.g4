@@ -1,9 +1,5 @@
 lexer grammar CSVLexer;
 
-@header {
-package csv; // Define el paquete Java donde se generará el código
-}
-
 // ---------- Reglas del lexer ----------
 
 // Token que define los separadores permitidos: coma, punto y coma o barra vertical

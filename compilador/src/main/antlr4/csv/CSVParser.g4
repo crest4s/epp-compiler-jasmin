@@ -1,7 +1,5 @@
 parser grammar CSVParser;
 
-@header { package csv; }
-
 options { tokenVocab = CSVLexer; language = Java; }
 
 // ---------- Reglas del parser ----------

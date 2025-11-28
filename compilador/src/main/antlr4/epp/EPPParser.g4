@@ -1,7 +1,5 @@
 parser grammar EPPParser;
 
-@header { package epp; }
-
 options { tokenVocab = EPPLexer; language = Java; }
 
 // --------------------------------------------------------------------
