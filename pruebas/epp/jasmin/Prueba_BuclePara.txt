@@ -4,13 +4,13 @@
 asignar contador = 0;P
 asignar limite = 4;P
 
-mostrar("Inicio bucle para de 0 a 3:");P
+mostrar "Inicio bucle para de 0 a 3:";P
 
 # La sintaxis del bucle 'para'
 para var1 desde 0 hasta limite paso 1 -> 
-    mostrar(i);P
+    mostrar(var1);P
     asignar contador = contador + 1;P
 terminar
 
-mostrar("Contador final:");P
-mostrar(contador);P
+mostrar "Contador final:";P
+mostrar contador;P

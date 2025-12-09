@@ -3,9 +3,9 @@
 
 # Caso 1: Variable no declarada/inicializada (Error Semántico de Referencia)
 asignar a = 1;P
-mostrar(a);P
+mostrar a;P
 # La variable 'b' nunca fue declarada ni inicializada
-mostrar(b);P 
+mostrar b;P 
 # >> Resultado Esperado: ERROR SEMÁNTICO: Variable 'b' no declarada/inicializada en línea X
 
 
@@ -15,13 +15,13 @@ asignar bool_val = verdadero;P
 
 # Intento de operacion aritmetica entre INT y BOOL
 asignar res = num + bool_val;P 
-mostrar(res);P
+mostrar res;P
 # >> Resultado Esperado: ERROR SEMÁNTICO: Operación '+' inválida entre tipo INT y BOOL en línea Y
 
 
 # Caso 3: Condicion invalida en bucle (el bucle 'mientras' espera una expresion booleana)
 asignar num = 1;P
 mientras (num) ->
-    mostrar(num);P
+    mostrar num;P
 terminar
 # >> Resultado Esperado: ERROR SEMÁNTICO: Condición del bucle 'mientras' debe ser de tipo BOOL en línea Z
