@@ -18,12 +18,12 @@
 
 # Package Files
 *.jar
-!Jasmin/**/jasmin.jar
+!jasmin/**/jasmin.jar
 *.war
 *.nar
 *.ear
 *.zip
-!Jasmin/**/*.zip
+!jasmin/**/*.zip
 *.tar.gz
 *.rar
 
@@ -32,18 +32,18 @@ hs_err_pid*
 replay_pid*
 
 # -------------------- Maven --------------------
-# Maven target directory (solo en maven-project)
-maven-project/target/
-maven-project/.mvn/wrapper/
+# Maven target directory
+compilador/target/
+compilador/.mvn/wrapper/
 
 # Maven wrapper
 .mvn/wrapper/maven-wrapper.jar
 .mvn/wrapper/maven-wrapper.properties
 
 # -------------------- ANTLR4 --------------------
-# Generated ANTLR files (mantener gen/ si se quiere versionar)
+# Generated ANTLR files
 # Descomentar si NO se quiere versionar los archivos generados:
-# maven-project/gen/
+# compilador/gen/
 # **/*Lexer.java
 # **/*Parser.java
 # **/*Listener.java
@@ -53,13 +53,16 @@ maven-project/.mvn/wrapper/
 # *.tokens
 # *.interp
 
+# Cache de ANTLR
+**/.antlr/
+
 # -------------------- IDE --------------------
-# IntelliJ IDEA (solo en maven-project)
-maven-project/.idea/
-maven-project/*.iml
-maven-project/*.iws
-maven-project/*.ipr
-maven-project/out/
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
 
 # Eclipse
 .classpath
@@ -105,3 +108,12 @@ $RECYCLE.BIN/
 
 # Archivos de configuración local
 local.properties
+
+# -------------------- Archivos Generados --------------------
+# Archivos Jasmin generados (.j) - excepto los de ejemplos
+*.j
+!jasmin/**/*.j
+!ejemplos/**/*.j
+
+# Archivos JSON generados (salidas de pruebas)
+pruebas/**/*_salida.json
