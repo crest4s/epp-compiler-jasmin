@@ -77,11 +77,10 @@ public class EPPToJasminVisitor extends EPPParserBaseVisitor<String> {
     @Override
     public String visitAsignacion(EPPParser.AsignacionContext ctx) {
         String varName = ctx.VARIABLE().getText();
-        String exprCode = visit(ctx.expresion());
         
         SymbolTable.Variable var = symbolTable.declareVariable(varName, SymbolTable.VarType.UNKNOWN);
         
-        jasminCode.append(exprCode);
+        visit(ctx.expresion());
         jasminCode.append("    istore_").append(var.localIndex).append("\n");
         popStack(1);
         
@@ -91,11 +90,10 @@ public class EPPToJasminVisitor extends EPPParserBaseVisitor<String> {
     @Override
     public String visitAsignacionSimple(EPPParser.AsignacionSimpleContext ctx) {
         String varName = ctx.VARIABLE().getText();
-        String exprCode = visit(ctx.expresion());
         
         SymbolTable.Variable var = symbolTable.declareVariable(varName, SymbolTable.VarType.UNKNOWN);
         
-        jasminCode.append(exprCode);
+        visit(ctx.expresion());
         jasminCode.append("    istore_").append(var.localIndex).append("\n");
         popStack(1);
         
@@ -107,14 +105,30 @@ public class EPPToJasminVisitor extends EPPParserBaseVisitor<String> {
         jasminCode.append("    getstatic java/lang/System/out Ljava/io/PrintStream;\n");
         pushStack(1);
         
-        String exprCode = visit(ctx.expresion());
-        jasminCode.append(exprCode);
+        // Determinar el tipo de expresión para usar la firma correcta de println
+        ParseTree expr = ctx.expresion();
+        boolean isString = isStringExpression(expr);
+        
+        visit(ctx.expresion());
         pushStack(1);
         
-        jasminCode.append("    invokevirtual java/io/PrintStream/println(I)V\n");
+        if (isString) {
+            jasminCode.append("    invokevirtual java/io/PrintStream/println(Ljava/lang/String;)V\n");
+        } else {
+            jasminCode.append("    invokevirtual java/io/PrintStream/println(I)V\n");
+        }
         popStack(2);
         
         return "";
+    }
+    
+    // Método auxiliar para determinar si una expresión es de tipo String
+    private boolean isStringExpression(ParseTree expr) {
+        if (expr instanceof EPPParser.ExprPrimariaContext) {
+            EPPParser.ExprPrimariaContext primCtx = (EPPParser.ExprPrimariaContext) expr;
+            return primCtx.expresionPrimaria() instanceof EPPParser.ExprTextoContext;
+        }
+        return false;
     }
     
     @Override
@@ -165,6 +179,23 @@ public class EPPToJasminVisitor extends EPPParserBaseVisitor<String> {
     }
     
     @Override
+    public String visitExprTexto(EPPParser.ExprTextoContext ctx) {
+        String text = ctx.STRING().getText();
+        // Remover las comillas del string
+        text = text.substring(1, text.length() - 1);
+        jasminCode.append("    ldc \"").append(text).append("\"\n");
+        pushStack(1);
+        
+        return "";
+    }
+    
+    @Override
+    public String visitExprPrimaria(EPPParser.ExprPrimariaContext ctx) {
+        // Delegar a la expresión primaria específica
+        return visit(ctx.expresionPrimaria());
+    }
+    
+    @Override
     public String visitExprAritmeticaSumaResta(EPPParser.ExprAritmeticaSumaRestaContext ctx) {
         visit(ctx.expresion(0));
         visit(ctx.expresion(1));
@@ -200,6 +231,102 @@ public class EPPToJasminVisitor extends EPPParserBaseVisitor<String> {
         popStack(1);
         
         return "";
+    }
+    
+    // Visitores para expresiones aritméticas (usadas en bucles para)
+    @Override
+    public String visitExprAritSumaResta(EPPParser.ExprAritSumaRestaContext ctx) {
+        visit(ctx.expresionAritmetica(0));
+        visit(ctx.expresionAritmetica(1));
+        
+        String op = ctx.operadorAditivo().getText();
+        if (op.equals("+")) {
+            jasminCode.append("    iadd\n");
+        } else {
+            jasminCode.append("    isub\n");
+        }
+        popStack(1);
+        
+        return "";
+    }
+    
+    @Override
+    public String visitExprAritMultDiv(EPPParser.ExprAritMultDivContext ctx) {
+        visit(ctx.expresionAritmetica(0));
+        visit(ctx.expresionAritmetica(1));
+        
+        String op = ctx.operadorMultiplicativo().getText();
+        switch (op) {
+            case "*":
+                jasminCode.append("    imul\n");
+                break;
+            case "/":
+                jasminCode.append("    idiv\n");
+                break;
+            case "%":
+                jasminCode.append("    irem\n");
+                break;
+        }
+        popStack(1);
+        
+        return "";
+    }
+    
+    @Override
+    public String visitExprAritPrimaria(EPPParser.ExprAritPrimariaContext ctx) {
+        return visit(ctx.expresionAritmeticaPrimaria());
+    }
+    
+    @Override
+    public String visitExprAritVariable(EPPParser.ExprAritVariableContext ctx) {
+        String varName = ctx.VARIABLE().getText();
+        SymbolTable.Variable var = symbolTable.getVariable(varName);
+        
+        if (var == null) {
+            throw new RuntimeException("Variable no declarada: " + varName);
+        }
+        
+        jasminCode.append("    iload_").append(var.localIndex).append("\n");
+        pushStack(1);
+        
+        return "";
+    }
+    
+    @Override
+    public String visitExprAritNumero(EPPParser.ExprAritNumeroContext ctx) {
+        int num = Integer.parseInt(ctx.NUM().getText());
+        
+        if (num >= -128 && num <= 127) {
+            jasminCode.append("    bipush ").append(num).append("\n");
+        } else if (num >= -32768 && num <= 32767) {
+            jasminCode.append("    sipush ").append(num).append("\n");
+        } else {
+            jasminCode.append("    ldc ").append(num).append("\n");
+        }
+        pushStack(1);
+        
+        return "";
+    }
+    
+    @Override
+    public String visitExprAritNumeroNegativo(EPPParser.ExprAritNumeroNegativoContext ctx) {
+        int num = -Integer.parseInt(ctx.NUM().getText());
+        
+        if (num >= -128 && num <= 127) {
+            jasminCode.append("    bipush ").append(num).append("\n");
+        } else if (num >= -32768 && num <= 32767) {
+            jasminCode.append("    sipush ").append(num).append("\n");
+        } else {
+            jasminCode.append("    ldc ").append(num).append("\n");
+        }
+        pushStack(1);
+        
+        return "";
+    }
+    
+    @Override
+    public String visitExprAritParentesis(EPPParser.ExprAritParentesisContext ctx) {
+        return visit(ctx.expresionAritmetica());
     }
     
     @Override
