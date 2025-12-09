@@ -1,0 +1,22 @@
+# E++ Test 3: Bucle MIENTRAS (WHILE) y Booleanos
+
+asignar j = 5;P
+asignar condicion_bucle = verdadero;P
+
+mostrar "Inicio bucle mientras:";P
+
+mientras (condicion_bucle) ->
+    mostrar j;P
+    asignar j = j - 1;P
+    
+    # Asignacion de booleano
+    asignar condicion_bucle = j > 2;P 
+terminar
+
+mostrar "Valor final de j:";P
+mostrar j;P
+
+# Uso del operador de negación NOT
+asignar resultado_final = NOT condicion_bucle;P 
+mostrar "Resultado booleano final (debe ser verdadero):";P
+mostrar resultado_final;P

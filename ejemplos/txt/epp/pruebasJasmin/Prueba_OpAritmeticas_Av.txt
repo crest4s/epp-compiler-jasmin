@@ -1,0 +1,22 @@
+# E++ Test 1: Operaciones Aritméticas: -, *, /, %
+
+asignar a = 20;P
+asignar b = 3;P
+
+# Resto
+asignar res_modulo = a % b;P
+mostrar "Modulo:";P
+mostrar res_modulo;P
+# Salida esperada: 2
+
+# Division
+asignar res_division_entera = a / b;P
+mostrar "Division Entera:";P
+mostrar res_division_entera;P
+# Salida esperada: 6
+
+# Expresion mixta
+asignar c = 10 + (2 * 5) - (res_modulo + 1);P
+mostrar "Expresion Mixta:";P
+mostrar c;P
+# Salida esperada: 17
