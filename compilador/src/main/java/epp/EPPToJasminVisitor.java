@@ -1,8 +1,6 @@
 package epp;
 
 import org.antlr.v4.runtime.tree.ParseTree;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Visitor que genera código Jasmin a partir del AST de E++.
@@ -196,6 +194,26 @@ public class EPPToJasminVisitor extends EPPParserBaseVisitor<String> {
     }
     
     @Override
+    public String visitExprParentesis(EPPParser.ExprParentesisContext ctx) {
+        // Los paréntesis no generan código, solo afectan la precedencia
+        return visit(ctx.expresion());
+    }
+    
+    @Override
+    public String visitExprBooleanoVerdadero(EPPParser.ExprBooleanoVerdaderoContext ctx) {
+        jasminCode.append("    iconst_1\n");
+        pushStack(1);
+        return "";
+    }
+    
+    @Override
+    public String visitExprBooleanoFalso(EPPParser.ExprBooleanoFalsoContext ctx) {
+        jasminCode.append("    iconst_0\n");
+        pushStack(1);
+        return "";
+    }
+    
+    @Override
     public String visitExprAritmeticaSumaResta(EPPParser.ExprAritmeticaSumaRestaContext ctx) {
         visit(ctx.expresion(0));
         visit(ctx.expresion(1));
@@ -330,6 +348,46 @@ public class EPPToJasminVisitor extends EPPParserBaseVisitor<String> {
     }
     
     @Override
+    public String visitCondicional(EPPParser.CondicionalContext ctx) {
+        String elseLabel = newLabel("else");
+        String endLabel = newLabel("end_if");
+        
+        // Evaluar condición y saltar al else si es falsa
+        visitConditionForBranch(ctx.expresionBooleana(), elseLabel);
+        
+        // Bloque del 'si'
+        visit(ctx.bloque(0));
+        
+        if (ctx.bloque().size() > 1) {
+            // Hay un bloque 'no' (else)
+            jasminCode.append("    goto ").append(endLabel).append("\n");
+            jasminCode.append(elseLabel).append(":\n");
+            visit(ctx.bloque(1));
+            jasminCode.append(endLabel).append(":\n");
+        } else {
+            // No hay bloque 'no'
+            jasminCode.append(elseLabel).append(":\n");
+        }
+        
+        return "";
+    }
+    
+    @Override
+    public String visitLeer(EPPParser.LeerContext ctx) {
+        String varName = ctx.VARIABLE().getText();
+        SymbolTable.Variable var = symbolTable.declareVariable(varName, SymbolTable.VarType.UNKNOWN);
+        
+        // TODO: Implementar lectura de entrada
+        // Por ahora, simplemente asignamos 0
+        jasminCode.append("    iconst_0\n");
+        pushStack(1);
+        jasminCode.append("    istore_").append(var.localIndex).append("\n");
+        popStack(1);
+        
+        return "";
+    }
+    
+    @Override
     public String visitMientras(EPPParser.MientrasContext ctx) {
         String startLabel = newLabel("while_start");
         String endLabel = newLabel("while_end");
@@ -337,8 +395,7 @@ public class EPPToJasminVisitor extends EPPParserBaseVisitor<String> {
         jasminCode.append(startLabel).append(":\n");
         
         // Evaluar condición y saltar si es falsa
-        String condCode = visitCondition(ctx.expresionBooleana(), endLabel);
-        jasminCode.append(condCode);
+        visitConditionForBranch(ctx.expresionBooleana(), endLabel);
         
         // Bloque del while
         visit(ctx.bloque());
@@ -396,10 +453,244 @@ public class EPPToJasminVisitor extends EPPParserBaseVisitor<String> {
         return "";
     }
     
-    // Generar código de comparación (salta a falseLabel si la condición es falsa)
-    private String visitCondition(EPPParser.ExpresionBooleanaContext ctx, String falseLabel) {
-        StringBuilder code = new StringBuilder();
+    // ===== EXPRESIONES BOOLEANAS =====
+    
+    @Override
+    public String visitExprBooleanaOr(EPPParser.ExprBooleanaOrContext ctx) {
+        String trueLabel = newLabel("or_true");
+        String endLabel = newLabel("or_end");
         
+        // Si la primera es verdadera, resultado es verdadero
+        visitBooleanExpressionWithLabels(ctx.expresionBooleana(0), trueLabel, null);
+        
+        // Si llegamos aquí, la primera era falsa, evaluar la segunda
+        visitBooleanExpressionWithLabels(ctx.expresionBooleana(1), trueLabel, null);
+        
+        // Ambas son falsas
+        jasminCode.append("    iconst_0\n");
+        pushStack(1);
+        jasminCode.append("    goto ").append(endLabel).append("\n");
+        
+        jasminCode.append(trueLabel).append(":\n");
+        jasminCode.append("    iconst_1\n");
+        pushStack(1);
+        
+        jasminCode.append(endLabel).append(":\n");
+        
+        return "";
+    }
+    
+    @Override
+    public String visitExprBooleanaAnd(EPPParser.ExprBooleanaAndContext ctx) {
+        String falseLabel = newLabel("and_false");
+        String endLabel = newLabel("and_end");
+        
+        // Si la primera es falsa, resultado es falso
+        visitBooleanExpressionWithLabels(ctx.expresionBooleana(0), null, falseLabel);
+        
+        // Si llegamos aquí, la primera era verdadera, evaluar la segunda
+        visitBooleanExpressionWithLabels(ctx.expresionBooleana(1), null, falseLabel);
+        
+        // Ambas son verdaderas
+        jasminCode.append("    iconst_1\n");
+        pushStack(1);
+        jasminCode.append("    goto ").append(endLabel).append("\n");
+        
+        jasminCode.append(falseLabel).append(":\n");
+        jasminCode.append("    iconst_0\n");
+        pushStack(1);
+        
+        jasminCode.append(endLabel).append(":\n");
+        
+        return "";
+    }
+    
+    @Override
+    public String visitExprBooleanaNot(EPPParser.ExprBooleanaNotContext ctx) {
+        String trueLabel = newLabel("not_true");
+        String endLabel = newLabel("not_end");
+        
+        // Evaluar la expresión y negar el resultado
+        visitBooleanExpressionWithLabels(ctx.expresionBooleana(), null, trueLabel);
+        
+        // La expresión era verdadera, devolver falso
+        jasminCode.append("    iconst_0\n");
+        pushStack(1);
+        jasminCode.append("    goto ").append(endLabel).append("\n");
+        
+        jasminCode.append(trueLabel).append(":\n");
+        jasminCode.append("    iconst_1\n");
+        pushStack(1);
+        
+        jasminCode.append(endLabel).append(":\n");
+        
+        return "";
+    }
+    
+    @Override
+    public String visitExprBooleanaComparacion(EPPParser.ExprBooleanaComparacionContext ctx) {
+        String trueLabel = newLabel("cmp_true");
+        String endLabel = newLabel("cmp_end");
+        
+        visit(ctx.expresionComparable(0));
+        visit(ctx.expresionComparable(1));
+        
+        String op = ctx.operadorComparacion().getText();
+        switch (op) {
+            case ">":
+                jasminCode.append("    if_icmpgt ").append(trueLabel).append("\n");
+                break;
+            case "<":
+                jasminCode.append("    if_icmplt ").append(trueLabel).append("\n");
+                break;
+            case "==":
+                jasminCode.append("    if_icmpeq ").append(trueLabel).append("\n");
+                break;
+            case "!=":
+                jasminCode.append("    if_icmpne ").append(trueLabel).append("\n");
+                break;
+            case ">=":
+                jasminCode.append("    if_icmpge ").append(trueLabel).append("\n");
+                break;
+            case "<=":
+                jasminCode.append("    if_icmple ").append(trueLabel).append("\n");
+                break;
+        }
+        popStack(2);
+        
+        jasminCode.append("    iconst_0\n");
+        pushStack(1);
+        jasminCode.append("    goto ").append(endLabel).append("\n");
+        
+        jasminCode.append(trueLabel).append(":\n");
+        jasminCode.append("    iconst_1\n");
+        pushStack(1);
+        
+        jasminCode.append(endLabel).append(":\n");
+        
+        return "";
+    }
+    
+    @Override
+    public String visitExprBooleanaVerdadero(EPPParser.ExprBooleanaVerdaderoContext ctx) {
+        jasminCode.append("    iconst_1\n");
+        pushStack(1);
+        return "";
+    }
+    
+    @Override
+    public String visitExprBooleanaFalso(EPPParser.ExprBooleanaFalsoContext ctx) {
+        jasminCode.append("    iconst_0\n");
+        pushStack(1);
+        return "";
+    }
+    
+    @Override
+    public String visitExprBooleanaParentesis(EPPParser.ExprBooleanaParentesisContext ctx) {
+        return visit(ctx.expresionBooleana());
+    }
+    
+    // ===== EXPRESIONES COMPARABLES =====
+    
+    @Override
+    public String visitExprCompAritmetica(EPPParser.ExprCompAritmeticaContext ctx) {
+        return visit(ctx.expresionAritmetica());
+    }
+    
+    @Override
+    public String visitExprCompString(EPPParser.ExprCompStringContext ctx) {
+        String text = ctx.STRING().getText();
+        text = text.substring(1, text.length() - 1);
+        jasminCode.append("    ldc \"").append(text).append("\"\n");
+        pushStack(1);
+        return "";
+    }
+    
+    @Override
+    public String visitExprCompVerdadero(EPPParser.ExprCompVerdaderoContext ctx) {
+        jasminCode.append("    iconst_1\n");
+        pushStack(1);
+        return "";
+    }
+    
+    @Override
+    public String visitExprCompFalso(EPPParser.ExprCompFalsoContext ctx) {
+        jasminCode.append("    iconst_0\n");
+        pushStack(1);
+        return "";
+    }
+    
+    @Override
+    public String visitExprCompVariable(EPPParser.ExprCompVariableContext ctx) {
+        String varName = ctx.VARIABLE().getText();
+        SymbolTable.Variable var = symbolTable.getVariable(varName);
+        
+        if (var == null) {
+            throw new RuntimeException("Variable no declarada: " + varName);
+        }
+        
+        jasminCode.append("    iload_").append(var.localIndex).append("\n");
+        pushStack(1);
+        
+        return "";
+    }
+    
+    // ===== EXPRESIONES CON COMPARACIÓN (para asignaciones) =====
+    
+    @Override
+    public String visitExprComparacion(EPPParser.ExprComparacionContext ctx) {
+        String trueLabel = newLabel("cmp_true");
+        String endLabel = newLabel("cmp_end");
+        
+        visit(ctx.expresion(0));
+        visit(ctx.expresion(1));
+        
+        String op = ctx.operadorComparacion().getText();
+        switch (op) {
+            case ">":
+                jasminCode.append("    if_icmpgt ").append(trueLabel).append("\n");
+                break;
+            case "<":
+                jasminCode.append("    if_icmplt ").append(trueLabel).append("\n");
+                break;
+            case "==":
+                jasminCode.append("    if_icmpeq ").append(trueLabel).append("\n");
+                break;
+            case "!=":
+                jasminCode.append("    if_icmpne ").append(trueLabel).append("\n");
+                break;
+            case ">=":
+                jasminCode.append("    if_icmpge ").append(trueLabel).append("\n");
+                break;
+            case "<=":
+                jasminCode.append("    if_icmple ").append(trueLabel).append("\n");
+                break;
+        }
+        popStack(2);
+        
+        jasminCode.append("    iconst_0\n");
+        pushStack(1);
+        jasminCode.append("    goto ").append(endLabel).append("\n");
+        
+        jasminCode.append(trueLabel).append(":\n");
+        jasminCode.append("    iconst_1\n");
+        pushStack(1);
+        
+        jasminCode.append(endLabel).append(":\n");
+        
+        return "";
+    }
+    
+    // ===== MÉTODOS AUXILIARES =====
+    
+    // Método auxiliar para evaluar expresiones booleanas con saltos condicionales
+    private void visitConditionForBranch(EPPParser.ExpresionBooleanaContext ctx, String falseLabel) {
+        visitBooleanExpressionWithLabels(ctx, null, falseLabel);
+    }
+    
+    // Evaluar expresión booleana y saltar a trueLabel si es verdadera o falseLabel si es falsa
+    private void visitBooleanExpressionWithLabels(EPPParser.ExpresionBooleanaContext ctx, 
+                                                    String trueLabel, String falseLabel) {
         if (ctx instanceof EPPParser.ExprBooleanaComparacionContext) {
             EPPParser.ExprBooleanaComparacionContext compCtx = (EPPParser.ExprBooleanaComparacionContext) ctx;
             
@@ -407,30 +698,99 @@ public class EPPToJasminVisitor extends EPPParserBaseVisitor<String> {
             visit(compCtx.expresionComparable(1));
             
             String op = compCtx.operadorComparacion().getText();
-            switch (op) {
-                case ">":
-                    code.append("    if_icmple ").append(falseLabel).append("\n");
-                    break;
-                case "<":
-                    code.append("    if_icmpge ").append(falseLabel).append("\n");
-                    break;
-                case "==":
-                    code.append("    if_icmpne ").append(falseLabel).append("\n");
-                    break;
-                case "!=":
-                    code.append("    if_icmpeq ").append(falseLabel).append("\n");
-                    break;
-                case ">=":
-                    code.append("    if_icmplt ").append(falseLabel).append("\n");
-                    break;
-                case "<=":
-                    code.append("    if_icmpgt ").append(falseLabel).append("\n");
-                    break;
+            
+            if (falseLabel != null) {
+                // Saltar si la condición es falsa
+                switch (op) {
+                    case ">":
+                        jasminCode.append("    if_icmple ").append(falseLabel).append("\n");
+                        break;
+                    case "<":
+                        jasminCode.append("    if_icmpge ").append(falseLabel).append("\n");
+                        break;
+                    case "==":
+                        jasminCode.append("    if_icmpne ").append(falseLabel).append("\n");
+                        break;
+                    case "!=":
+                        jasminCode.append("    if_icmpeq ").append(falseLabel).append("\n");
+                        break;
+                    case ">=":
+                        jasminCode.append("    if_icmplt ").append(falseLabel).append("\n");
+                        break;
+                    case "<=":
+                        jasminCode.append("    if_icmpgt ").append(falseLabel).append("\n");
+                        break;
+                }
+            } else if (trueLabel != null) {
+                // Saltar si la condición es verdadera
+                switch (op) {
+                    case ">":
+                        jasminCode.append("    if_icmpgt ").append(trueLabel).append("\n");
+                        break;
+                    case "<":
+                        jasminCode.append("    if_icmplt ").append(trueLabel).append("\n");
+                        break;
+                    case "==":
+                        jasminCode.append("    if_icmpeq ").append(trueLabel).append("\n");
+                        break;
+                    case "!=":
+                        jasminCode.append("    if_icmpne ").append(trueLabel).append("\n");
+                        break;
+                    case ">=":
+                        jasminCode.append("    if_icmpge ").append(trueLabel).append("\n");
+                        break;
+                    case "<=":
+                        jasminCode.append("    if_icmple ").append(trueLabel).append("\n");
+                        break;
+                }
             }
             popStack(2);
+        } else if (ctx instanceof EPPParser.ExprBooleanaVerdaderoContext) {
+            // Si es literal 'verdadero', no hacer nada (continuar) o saltar al trueLabel
+            if (trueLabel != null) {
+                jasminCode.append("    goto ").append(trueLabel).append("\n");
+            }
+        } else if (ctx instanceof EPPParser.ExprBooleanaFalsoContext) {
+            // Si es literal 'falso', saltar al falseLabel
+            if (falseLabel != null) {
+                jasminCode.append("    goto ").append(falseLabel).append("\n");
+            }
+        } else if (ctx instanceof EPPParser.ExprBooleanaParentesisContext) {
+            EPPParser.ExprBooleanaParentesisContext parCtx = (EPPParser.ExprBooleanaParentesisContext) ctx;
+            visitBooleanExpressionWithLabels(parCtx.expresionBooleana(), trueLabel, falseLabel);
+        } else if (ctx instanceof EPPParser.ExprBooleanaAndContext) {
+            EPPParser.ExprBooleanaAndContext andCtx = (EPPParser.ExprBooleanaAndContext) ctx;
+            if (falseLabel != null) {
+                // Para AND: si la primera es falsa, saltar a falseLabel
+                visitBooleanExpressionWithLabels(andCtx.expresionBooleana(0), null, falseLabel);
+                // Si llegamos aquí, evaluar la segunda
+                visitBooleanExpressionWithLabels(andCtx.expresionBooleana(1), null, falseLabel);
+            } else if (trueLabel != null) {
+                String nextCheck = newLabel("and_check");
+                // Para AND: ambas deben ser verdaderas
+                visitBooleanExpressionWithLabels(andCtx.expresionBooleana(0), null, nextCheck);
+                visitBooleanExpressionWithLabels(andCtx.expresionBooleana(1), trueLabel, nextCheck);
+                jasminCode.append(nextCheck).append(":\n");
+            }
+        } else if (ctx instanceof EPPParser.ExprBooleanaOrContext) {
+            EPPParser.ExprBooleanaOrContext orCtx = (EPPParser.ExprBooleanaOrContext) ctx;
+            if (trueLabel != null) {
+                // Para OR: si la primera es verdadera, saltar a trueLabel
+                visitBooleanExpressionWithLabels(orCtx.expresionBooleana(0), trueLabel, null);
+                // Si llegamos aquí, evaluar la segunda
+                visitBooleanExpressionWithLabels(orCtx.expresionBooleana(1), trueLabel, null);
+            } else if (falseLabel != null) {
+                String nextCheck = newLabel("or_check");
+                // Para OR: ambas deben ser falsas para saltar a falseLabel
+                visitBooleanExpressionWithLabels(orCtx.expresionBooleana(0), nextCheck, null);
+                visitBooleanExpressionWithLabels(orCtx.expresionBooleana(1), nextCheck, falseLabel);
+                jasminCode.append(nextCheck).append(":\n");
+            }
+        } else if (ctx instanceof EPPParser.ExprBooleanaNotContext) {
+            EPPParser.ExprBooleanaNotContext notCtx = (EPPParser.ExprBooleanaNotContext) ctx;
+            // Para NOT: invertir los labels
+            visitBooleanExpressionWithLabels(notCtx.expresionBooleana(), falseLabel, trueLabel);
         }
-        
-        return code.toString();
     }
     
     public String getJasminCode() {
