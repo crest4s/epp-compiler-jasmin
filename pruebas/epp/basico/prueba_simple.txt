@@ -1,5 +1,0 @@
-# Programa simple de prueba E++
-asignar x = 10;P
-asignar y = 20;P
-asignar suma = x + y;P
-mostrar suma;P

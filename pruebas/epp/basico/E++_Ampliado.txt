@@ -3,7 +3,7 @@
 # Inicializacion de variables
 asignar i = 10;P
 asignar limite = 0;P
-asignar nombre = " ";P
+asignar codigo = 0;P
 
 # Lectura de entrada: Ampliacion 'leer'
 mostrar "Introduce un limite para el contador (ej: 5): ";P
@@ -27,12 +27,12 @@ mientras (i > limite) ->
     terminar
 terminar
 
-# Lectura de cadena
-mostrar "Introduce tu nombre: ";P
-leer nombre;P
+# Lectura de codigo numerico (en lugar de cadena)
+mostrar "Introduce tu codigo (1=Marta, 2=Otro): ";P
+leer codigo;P
 
-# Condicional de comparacion con cadena
-nombre == "Marta" ???
+# Condicional de comparacion con numero
+codigo == 1 ???
 si ->
     mostrar "Hola Marta.";P
 no ->

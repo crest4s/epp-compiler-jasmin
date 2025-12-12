@@ -39,6 +39,32 @@ public class EPPToJasminVisitor extends EPPParserBaseVisitor<String> {
         currentStack -= n;
     }
     
+    /**
+     * Genera la instrucción iload correcta según el índice.
+     * iload_N solo funciona para N = 0, 1, 2, 3.
+     * Para índices >= 4, se debe usar iload N.
+     */
+    private void generateIload(int localIndex) {
+        if (localIndex >= 0 && localIndex <= 3) {
+            jasminCode.append("    iload_").append(localIndex).append("\n");
+        } else {
+            jasminCode.append("    iload ").append(localIndex).append("\n");
+        }
+    }
+    
+    /**
+     * Genera la instrucción istore correcta según el índice.
+     * istore_N solo funciona para N = 0, 1, 2, 3.
+     * Para índices >= 4, se debe usar istore N.
+     */
+    private void generateIstore(int localIndex) {
+        if (localIndex >= 0 && localIndex <= 3) {
+            jasminCode.append("    istore_").append(localIndex).append("\n");
+        } else {
+            jasminCode.append("    istore ").append(localIndex).append("\n");
+        }
+    }
+    
     @Override
     public String visitPrograma(EPPParser.ProgramaContext ctx) {
         // Estructura base de la clase
@@ -79,7 +105,7 @@ public class EPPToJasminVisitor extends EPPParserBaseVisitor<String> {
         SymbolTable.Variable var = symbolTable.declareVariable(varName, SymbolTable.VarType.UNKNOWN);
         
         visit(ctx.expresion());
-        jasminCode.append("    istore_").append(var.localIndex).append("\n");
+        generateIstore(var.localIndex);
         popStack(1);
         
         return "";
@@ -92,7 +118,7 @@ public class EPPToJasminVisitor extends EPPParserBaseVisitor<String> {
         SymbolTable.Variable var = symbolTable.declareVariable(varName, SymbolTable.VarType.UNKNOWN);
         
         visit(ctx.expresion());
-        jasminCode.append("    istore_").append(var.localIndex).append("\n");
+        generateIstore(var.localIndex);
         popStack(1);
         
         return "";
@@ -131,14 +157,32 @@ public class EPPToJasminVisitor extends EPPParserBaseVisitor<String> {
     
     @Override
     public String visitExprNumero(EPPParser.ExprNumeroContext ctx) {
-        int num = Integer.parseInt(ctx.NUM().getText());
+        String numText = ctx.NUM().getText();
         
-        if (num >= -128 && num <= 127) {
-            jasminCode.append("    bipush ").append(num).append("\n");
-        } else if (num >= -32768 && num <= 32767) {
-            jasminCode.append("    sipush ").append(num).append("\n");
+        // Verificar si es un número decimal
+        if (numText.contains(".")) {
+            // Convertir decimal a entero (truncar la parte decimal)
+            double numDouble = Double.parseDouble(numText);
+            int num = (int) numDouble;
+            
+            if (num >= -128 && num <= 127) {
+                jasminCode.append("    bipush ").append(num).append("\n");
+            } else if (num >= -32768 && num <= 32767) {
+                jasminCode.append("    sipush ").append(num).append("\n");
+            } else {
+                jasminCode.append("    ldc ").append(num).append("\n");
+            }
         } else {
-            jasminCode.append("    ldc ").append(num).append("\n");
+            // Número entero
+            int num = Integer.parseInt(numText);
+            
+            if (num >= -128 && num <= 127) {
+                jasminCode.append("    bipush ").append(num).append("\n");
+            } else if (num >= -32768 && num <= 32767) {
+                jasminCode.append("    sipush ").append(num).append("\n");
+            } else {
+                jasminCode.append("    ldc ").append(num).append("\n");
+            }
         }
         pushStack(1);
         
@@ -147,14 +191,32 @@ public class EPPToJasminVisitor extends EPPParserBaseVisitor<String> {
     
     @Override
     public String visitExprNumeroNegativo(EPPParser.ExprNumeroNegativoContext ctx) {
-        int num = -Integer.parseInt(ctx.NUM().getText());
+        String numText = ctx.NUM().getText();
         
-        if (num >= -128 && num <= 127) {
-            jasminCode.append("    bipush ").append(num).append("\n");
-        } else if (num >= -32768 && num <= 32767) {
-            jasminCode.append("    sipush ").append(num).append("\n");
+        // Verificar si es un número decimal
+        if (numText.contains(".")) {
+            // Convertir decimal a entero (truncar la parte decimal)
+            double numDouble = Double.parseDouble(numText);
+            int num = -(int) numDouble;
+            
+            if (num >= -128 && num <= 127) {
+                jasminCode.append("    bipush ").append(num).append("\n");
+            } else if (num >= -32768 && num <= 32767) {
+                jasminCode.append("    sipush ").append(num).append("\n");
+            } else {
+                jasminCode.append("    ldc ").append(num).append("\n");
+            }
         } else {
-            jasminCode.append("    ldc ").append(num).append("\n");
+            // Número entero
+            int num = -Integer.parseInt(numText);
+            
+            if (num >= -128 && num <= 127) {
+                jasminCode.append("    bipush ").append(num).append("\n");
+            } else if (num >= -32768 && num <= 32767) {
+                jasminCode.append("    sipush ").append(num).append("\n");
+            } else {
+                jasminCode.append("    ldc ").append(num).append("\n");
+            }
         }
         pushStack(1);
         
@@ -170,7 +232,7 @@ public class EPPToJasminVisitor extends EPPParserBaseVisitor<String> {
             throw new RuntimeException("Variable no declarada: " + varName);
         }
         
-        jasminCode.append("    iload_").append(var.localIndex).append("\n");
+        generateIload(var.localIndex);
         pushStack(1);
         
         return "";
@@ -304,7 +366,7 @@ public class EPPToJasminVisitor extends EPPParserBaseVisitor<String> {
             throw new RuntimeException("Variable no declarada: " + varName);
         }
         
-        jasminCode.append("    iload_").append(var.localIndex).append("\n");
+        generateIload(var.localIndex);
         pushStack(1);
         
         return "";
@@ -390,7 +452,7 @@ public class EPPToJasminVisitor extends EPPParserBaseVisitor<String> {
         jasminCode.append("    invokevirtual java/util/Scanner/nextInt()I\n");
         popStack(1);
         pushStack(1);
-        jasminCode.append("    istore_").append(var.localIndex).append("\n");
+        generateIstore(var.localIndex);
         popStack(1);
         
         return "";
@@ -422,7 +484,7 @@ public class EPPToJasminVisitor extends EPPParserBaseVisitor<String> {
         
         // Inicializar variable del bucle
         visit(ctx.expresionAritmetica(0)); // desde
-        jasminCode.append("    istore_").append(var.localIndex).append("\n");
+        generateIstore(var.localIndex);
         popStack(1);
         
         String startLabel = newLabel("for_start");
@@ -431,7 +493,7 @@ public class EPPToJasminVisitor extends EPPParserBaseVisitor<String> {
         jasminCode.append(startLabel).append(":\n");
         
         // Condición: variable < hasta
-        jasminCode.append("    iload_").append(var.localIndex).append("\n");
+        generateIload(var.localIndex);
         pushStack(1);
         visit(ctx.expresionAritmetica(1)); // hasta
         jasminCode.append("    if_icmpge ").append(endLabel).append("\n");
@@ -440,8 +502,8 @@ public class EPPToJasminVisitor extends EPPParserBaseVisitor<String> {
         // Bloque del for
         visit(ctx.bloque());
         
-        // Incremento: variable + paso
-        jasminCode.append("    iload_").append(var.localIndex).append("\n");
+        // Incrementar variable
+        generateIload(var.localIndex);
         pushStack(1);
         
         if (ctx.expresionAritmetica().size() > 2) {
@@ -453,7 +515,7 @@ public class EPPToJasminVisitor extends EPPParserBaseVisitor<String> {
         
         jasminCode.append("    iadd\n");
         popStack(1);
-        jasminCode.append("    istore_").append(var.localIndex).append("\n");
+        generateIstore(var.localIndex);
         popStack(1);
         
         jasminCode.append("    goto ").append(startLabel).append("\n");
@@ -638,7 +700,7 @@ public class EPPToJasminVisitor extends EPPParserBaseVisitor<String> {
             throw new RuntimeException("Variable no declarada: " + varName);
         }
         
-        jasminCode.append("    iload_").append(var.localIndex).append("\n");
+        generateIload(var.localIndex);
         pushStack(1);
         
         return "";
