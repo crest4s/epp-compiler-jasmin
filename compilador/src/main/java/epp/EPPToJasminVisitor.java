@@ -211,7 +211,32 @@ public class EPPToJasminVisitor extends EPPParserBaseVisitor<String> {
     private boolean isStringExpression(ParseTree expr) {
         if (expr instanceof EPPParser.ExprPrimariaContext) {
             EPPParser.ExprPrimariaContext primCtx = (EPPParser.ExprPrimariaContext) expr;
-            return primCtx.expresionPrimaria() instanceof EPPParser.ExprTextoContext;
+            EPPParser.ExpresionPrimariaContext primaria = primCtx.expresionPrimaria();
+            
+            // String literal
+            if (primaria instanceof EPPParser.ExprTextoContext) {
+                return true;
+            }
+            
+            // Variable de tipo string
+            if (primaria instanceof EPPParser.ExprVariableContext) {
+                String varName = ((EPPParser.ExprVariableContext) primaria).VARIABLE().getText();
+                SymbolTable.Variable var = symbolTable.getVariable(varName);
+                return var != null && var.type == SymbolTable.VarType.STRING;
+            }
+        }
+        return false;
+    }
+    
+    // Método auxiliar para determinar si una expresión comparable es de tipo String
+    private boolean isStringComparable(EPPParser.ExpresionComparableContext expr) {
+        if (expr instanceof EPPParser.ExprCompStringContext) {
+            return true;
+        }
+        if (expr instanceof EPPParser.ExprCompVariableContext) {
+            String varName = ((EPPParser.ExprCompVariableContext) expr).VARIABLE().getText();
+            SymbolTable.Variable var = symbolTable.getVariable(varName);
+            return var != null && var.type == SymbolTable.VarType.STRING;
         }
         return false;
     }
@@ -492,7 +517,12 @@ public class EPPToJasminVisitor extends EPPParserBaseVisitor<String> {
             throw new RuntimeException("Variable no declarada: " + varName);
         }
         
-        generateIload(var.localIndex);
+        // Usar load apropiado según el tipo
+        if (var.type == SymbolTable.VarType.STRING) {
+            generateAload(var.localIndex);
+        } else {
+            generateIload(var.localIndex);
+        }
         pushStack(1);
         
         return "";
@@ -826,7 +856,12 @@ public class EPPToJasminVisitor extends EPPParserBaseVisitor<String> {
             throw new RuntimeException("Variable no declarada: " + varName);
         }
         
-        generateIload(var.localIndex);
+        // Usar load apropiado según el tipo
+        if (var.type == SymbolTable.VarType.STRING) {
+            generateAload(var.localIndex);
+        } else {
+            generateIload(var.localIndex);
+        }
         pushStack(1);
         
         return "";
@@ -839,41 +874,63 @@ public class EPPToJasminVisitor extends EPPParserBaseVisitor<String> {
         String trueLabel = newLabel("cmp_true");
         String endLabel = newLabel("cmp_end");
         
-        visit(ctx.expresion(0));
-        visit(ctx.expresion(1));
-        
+        // Verificar si estamos comparando strings
+        boolean isStringComparison = isStringExpression(ctx.expresion(0)) || isStringExpression(ctx.expresion(1));
         String op = ctx.operadorComparacion().getText();
-        switch (op) {
-            case ">":
-                jasminCode.append("    if_icmpgt ").append(trueLabel).append("\n");
-                break;
-            case "<":
-                jasminCode.append("    if_icmplt ").append(trueLabel).append("\n");
-                break;
-            case "==":
-                jasminCode.append("    if_icmpeq ").append(trueLabel).append("\n");
-                break;
-            case "!=":
-                jasminCode.append("    if_icmpne ").append(trueLabel).append("\n");
-                break;
-            case ">=":
-                jasminCode.append("    if_icmpge ").append(trueLabel).append("\n");
-                break;
-            case "<=":
-                jasminCode.append("    if_icmple ").append(trueLabel).append("\n");
-                break;
+        
+        if (isStringComparison && (op.equals("==") || op.equals("!="))) {
+            // Comparación de strings usando equals
+            visit(ctx.expresion(0));
+            visit(ctx.expresion(1));
+            
+            // Llamar a String.equals()
+            jasminCode.append("    invokevirtual java/lang/String/equals(Ljava/lang/Object;)Z\n");
+            popStack(1); // Queda el resultado boolean en la pila
+            
+            if (op.equals("!=")) {
+                // Invertir el resultado para !=
+                jasminCode.append("    iconst_1\n");
+                pushStack(1);
+                jasminCode.append("    ixor\n");
+                popStack(1);
+            }
+        } else {
+            // Comparación de enteros
+            visit(ctx.expresion(0));
+            visit(ctx.expresion(1));
+            
+            switch (op) {
+                case ">":
+                    jasminCode.append("    if_icmpgt ").append(trueLabel).append("\n");
+                    break;
+                case "<":
+                    jasminCode.append("    if_icmplt ").append(trueLabel).append("\n");
+                    break;
+                case "==":
+                    jasminCode.append("    if_icmpeq ").append(trueLabel).append("\n");
+                    break;
+                case "!=":
+                    jasminCode.append("    if_icmpne ").append(trueLabel).append("\n");
+                    break;
+                case ">=":
+                    jasminCode.append("    if_icmpge ").append(trueLabel).append("\n");
+                    break;
+                case "<=":
+                    jasminCode.append("    if_icmple ").append(trueLabel).append("\n");
+                    break;
+            }
+            popStack(2);
+            
+            jasminCode.append("    iconst_0\n");
+            pushStack(1);
+            jasminCode.append("    goto ").append(endLabel).append("\n");
+            
+            jasminCode.append(trueLabel).append(":\n");
+            jasminCode.append("    iconst_1\n");
+            pushStack(1);
+            
+            jasminCode.append(endLabel).append(":\n");
         }
-        popStack(2);
-        
-        jasminCode.append("    iconst_0\n");
-        pushStack(1);
-        jasminCode.append("    goto ").append(endLabel).append("\n");
-        
-        jasminCode.append(trueLabel).append(":\n");
-        jasminCode.append("    iconst_1\n");
-        pushStack(1);
-        
-        jasminCode.append(endLabel).append(":\n");
         
         return "";
     }
@@ -891,57 +948,86 @@ public class EPPToJasminVisitor extends EPPParserBaseVisitor<String> {
         if (ctx instanceof EPPParser.ExprBooleanaComparacionContext) {
             EPPParser.ExprBooleanaComparacionContext compCtx = (EPPParser.ExprBooleanaComparacionContext) ctx;
             
-            visit(compCtx.expresionComparable(0));
-            visit(compCtx.expresionComparable(1));
+            EPPParser.ExpresionComparableContext expr0 = compCtx.expresionComparable(0);
+            EPPParser.ExpresionComparableContext expr1 = compCtx.expresionComparable(1);
             
+            // Verificar si es comparación de strings
+            boolean isStringComp = isStringComparable(expr0) || isStringComparable(expr1);
             String op = compCtx.operadorComparacion().getText();
             
-            if (falseLabel != null) {
-                // Saltar si la condición es falsa
-                switch (op) {
-                    case ">":
-                        jasminCode.append("    if_icmple ").append(falseLabel).append("\n");
-                        break;
-                    case "<":
-                        jasminCode.append("    if_icmpge ").append(falseLabel).append("\n");
-                        break;
-                    case "==":
-                        jasminCode.append("    if_icmpne ").append(falseLabel).append("\n");
-                        break;
-                    case "!=":
-                        jasminCode.append("    if_icmpeq ").append(falseLabel).append("\n");
-                        break;
-                    case ">=":
-                        jasminCode.append("    if_icmplt ").append(falseLabel).append("\n");
-                        break;
-                    case "<=":
-                        jasminCode.append("    if_icmpgt ").append(falseLabel).append("\n");
-                        break;
+            if (isStringComp && (op.equals("==") || op.equals("!="))) {
+                // Comparación de strings
+                visit(expr0);
+                visit(expr1);
+                
+                jasminCode.append("    invokevirtual java/lang/String/equals(Ljava/lang/Object;)Z\n");
+                popStack(1);
+                
+                if (falseLabel != null) {
+                    if (op.equals("==")) {
+                        jasminCode.append("    ifeq ").append(falseLabel).append("\n");
+                    } else { // !=
+                        jasminCode.append("    ifne ").append(falseLabel).append("\n");
+                    }
+                } else if (trueLabel != null) {
+                    if (op.equals("==")) {
+                        jasminCode.append("    ifne ").append(trueLabel).append("\n");
+                    } else { // !=
+                        jasminCode.append("    ifeq ").append(trueLabel).append("\n");
+                    }
                 }
-            } else if (trueLabel != null) {
-                // Saltar si la condición es verdadera
-                switch (op) {
-                    case ">":
-                        jasminCode.append("    if_icmpgt ").append(trueLabel).append("\n");
-                        break;
-                    case "<":
-                        jasminCode.append("    if_icmplt ").append(trueLabel).append("\n");
-                        break;
-                    case "==":
-                        jasminCode.append("    if_icmpeq ").append(trueLabel).append("\n");
-                        break;
-                    case "!=":
-                        jasminCode.append("    if_icmpne ").append(trueLabel).append("\n");
-                        break;
-                    case ">=":
-                        jasminCode.append("    if_icmpge ").append(trueLabel).append("\n");
-                        break;
-                    case "<=":
-                        jasminCode.append("    if_icmple ").append(trueLabel).append("\n");
-                        break;
+            } else {
+                // Comparación de enteros
+                visit(expr0);
+                visit(expr1);
+                
+                if (falseLabel != null) {
+                    // Saltar si la condición es falsa
+                    switch (op) {
+                        case ">":
+                            jasminCode.append("    if_icmple ").append(falseLabel).append("\n");
+                            break;
+                        case "<":
+                            jasminCode.append("    if_icmpge ").append(falseLabel).append("\n");
+                            break;
+                        case "==":
+                            jasminCode.append("    if_icmpne ").append(falseLabel).append("\n");
+                            break;
+                        case "!=":
+                            jasminCode.append("    if_icmpeq ").append(falseLabel).append("\n");
+                            break;
+                        case ">=":
+                            jasminCode.append("    if_icmplt ").append(falseLabel).append("\n");
+                            break;
+                        case "<=":
+                            jasminCode.append("    if_icmpgt ").append(falseLabel).append("\n");
+                            break;
+                    }
+                } else if (trueLabel != null) {
+                    // Saltar si la condición es verdadera
+                    switch (op) {
+                        case ">":
+                            jasminCode.append("    if_icmpgt ").append(trueLabel).append("\n");
+                            break;
+                        case "<":
+                            jasminCode.append("    if_icmplt ").append(trueLabel).append("\n");
+                            break;
+                        case "==":
+                            jasminCode.append("    if_icmpeq ").append(trueLabel).append("\n");
+                            break;
+                        case "!=":
+                            jasminCode.append("    if_icmpne ").append(trueLabel).append("\n");
+                            break;
+                        case ">=":
+                            jasminCode.append("    if_icmpge ").append(trueLabel).append("\n");
+                            break;
+                        case "<=":
+                            jasminCode.append("    if_icmple ").append(trueLabel).append("\n");
+                            break;
+                    }
                 }
+                popStack(2);
             }
-            popStack(2);
         } else if (ctx instanceof EPPParser.ExprBooleanaVerdaderoContext) {
             // Si es literal 'verdadero', no hacer nada (continuar) o saltar al trueLabel
             if (trueLabel != null) {
