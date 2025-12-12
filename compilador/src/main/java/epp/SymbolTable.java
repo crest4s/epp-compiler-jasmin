@@ -36,7 +36,12 @@ public class SymbolTable {
     // Registra una variable nueva o devuelve la existente
     public Variable declareVariable(String name, VarType type) {
         if (variables.containsKey(name)) {
-            return variables.get(name);
+            Variable existingVar = variables.get(name);
+            // Actualizar tipo si era UNKNOWN
+            if (existingVar.type == VarType.UNKNOWN && type != VarType.UNKNOWN) {
+                existingVar.type = type;
+            }
+            return existingVar;
         }
         
         Variable var = new Variable(name, nextLocalIndex++, type);

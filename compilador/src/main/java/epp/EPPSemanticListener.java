@@ -90,6 +90,10 @@ public class EPPSemanticListener extends EPPParserBaseListener {
         }
     }
     
+    // ===== DIVISIÓN POR CERO =====
+    // Nota: La detección de división por cero ahora se hace en el visitor
+    // para tener acceso completo al contexto de la expresión
+    
     /**
      * Imprime un resumen de errores para debugging.
      */

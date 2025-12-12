@@ -81,7 +81,13 @@ public class EPPCompilerCLI {
 
             // Generación de código Jasmin
             EPPToJasminVisitor visitor = new EPPToJasminVisitor(baseName);
-            visitor.visit(tree);
+            try {
+                visitor.visit(tree);
+            } catch (RuntimeException e) {
+                System.err.println("Compilación abortada debido a errores semánticos.");
+                System.err.println(e.getMessage());
+                System.exit(1);
+            }
             String jasminCode = visitor.getJasminCode();
 
             // Guardar en archivo

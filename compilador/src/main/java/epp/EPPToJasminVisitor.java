@@ -65,6 +65,51 @@ public class EPPToJasminVisitor extends EPPParserBaseVisitor<String> {
         }
     }
     
+    /**
+     * Genera la instrucción astore correcta según el índice (para objetos/strings).
+     */
+    private void generateAstore(int localIndex) {
+        if (localIndex >= 0 && localIndex <= 3) {
+            jasminCode.append("    astore_").append(localIndex).append("\n");
+        } else {
+            jasminCode.append("    astore ").append(localIndex).append("\n");
+        }
+    }
+    
+    /**
+     * Genera la instrucción aload correcta según el índice (para objetos/strings).
+     */
+    private void generateAload(int localIndex) {
+        if (localIndex >= 0 && localIndex <= 3) {
+            jasminCode.append("    aload_").append(localIndex).append("\n");
+        } else {
+            jasminCode.append("    aload ").append(localIndex).append("\n");
+        }
+    }
+    
+    /**
+     * Determina el tipo de una expresión.
+     */
+    private SymbolTable.VarType getExpressionType(EPPParser.ExpresionContext ctx) {
+        if (ctx instanceof EPPParser.ExprPrimariaContext) {
+            EPPParser.ExpresionPrimariaContext primCtx = ((EPPParser.ExprPrimariaContext) ctx).expresionPrimaria();
+            if (primCtx instanceof EPPParser.ExprTextoContext) {
+                return SymbolTable.VarType.STRING;
+            } else if (primCtx instanceof EPPParser.ExprNumeroContext || 
+                       primCtx instanceof EPPParser.ExprNumeroNegativoContext) {
+                return SymbolTable.VarType.INT;
+            } else if (primCtx instanceof EPPParser.ExprVariableContext) {
+                String varName = ((EPPParser.ExprVariableContext) primCtx).VARIABLE().getText();
+                SymbolTable.Variable var = symbolTable.getVariable(varName);
+                return var != null ? var.type : SymbolTable.VarType.INT;
+            }
+        } else if (ctx instanceof EPPParser.ExprComparacionContext) {
+            // Las comparaciones devuelven booleanos
+            return SymbolTable.VarType.BOOLEAN;
+        }
+        return SymbolTable.VarType.INT; // Por defecto, asumimos entero
+    }
+    
     @Override
     public String visitPrograma(EPPParser.ProgramaContext ctx) {
         // Estructura base de la clase
@@ -102,10 +147,18 @@ public class EPPToJasminVisitor extends EPPParserBaseVisitor<String> {
     public String visitAsignacion(EPPParser.AsignacionContext ctx) {
         String varName = ctx.VARIABLE().getText();
         
-        SymbolTable.Variable var = symbolTable.declareVariable(varName, SymbolTable.VarType.UNKNOWN);
+        // Determinar el tipo de la expresión
+        SymbolTable.VarType type = getExpressionType(ctx.expresion());
+        SymbolTable.Variable var = symbolTable.declareVariable(varName, type);
         
         visit(ctx.expresion());
-        generateIstore(var.localIndex);
+        
+        // Usar store apropiado según el tipo
+        if (type == SymbolTable.VarType.STRING) {
+            generateAstore(var.localIndex);
+        } else {
+            generateIstore(var.localIndex);
+        }
         popStack(1);
         
         return "";
@@ -115,10 +168,18 @@ public class EPPToJasminVisitor extends EPPParserBaseVisitor<String> {
     public String visitAsignacionSimple(EPPParser.AsignacionSimpleContext ctx) {
         String varName = ctx.VARIABLE().getText();
         
-        SymbolTable.Variable var = symbolTable.declareVariable(varName, SymbolTable.VarType.UNKNOWN);
+        // Determinar el tipo de la expresión
+        SymbolTable.VarType type = getExpressionType(ctx.expresion());
+        SymbolTable.Variable var = symbolTable.declareVariable(varName, type);
         
         visit(ctx.expresion());
-        generateIstore(var.localIndex);
+        
+        // Usar store apropiado según el tipo
+        if (type == SymbolTable.VarType.STRING) {
+            generateAstore(var.localIndex);
+        } else {
+            generateIstore(var.localIndex);
+        }
         popStack(1);
         
         return "";
@@ -232,7 +293,12 @@ public class EPPToJasminVisitor extends EPPParserBaseVisitor<String> {
             throw new RuntimeException("Variable no declarada: " + varName);
         }
         
-        generateIload(var.localIndex);
+        // Usar load apropiado según el tipo
+        if (var.type == SymbolTable.VarType.STRING) {
+            generateAload(var.localIndex);
+        } else {
+            generateIload(var.localIndex);
+        }
         pushStack(1);
         
         return "";
@@ -293,10 +359,20 @@ public class EPPToJasminVisitor extends EPPParserBaseVisitor<String> {
     
     @Override
     public String visitExprAritmeticaMultDiv(EPPParser.ExprAritmeticaMultDivContext ctx) {
+        String op = ctx.operadorMultiplicativo().getText();
+        
+        // Verificar división/módulo por cero con literales
+        if (op.equals("/") || op.equals("%")) {
+            EPPParser.ExpresionContext divisor = ctx.expresion(1);
+            if (isZeroLiteralExpresionGeneral(divisor)) {
+                String errorMsg = op.equals("/") ? "División por cero detectada" : "Módulo por cero detectado";
+                throw new RuntimeException("Error semántico: " + errorMsg + " en línea " + ctx.getStart().getLine());
+            }
+        }
+        
         visit(ctx.expresion(0));
         visit(ctx.expresion(1));
         
-        String op = ctx.operadorMultiplicativo().getText();
         switch (op) {
             case "*":
                 jasminCode.append("    imul\n");
@@ -311,6 +387,26 @@ public class EPPToJasminVisitor extends EPPParserBaseVisitor<String> {
         popStack(1);
         
         return "";
+    }
+    
+    /**
+     * Verifica si una expresión general es el literal cero.
+     */
+    private boolean isZeroLiteralExpresionGeneral(EPPParser.ExpresionContext ctx) {
+        if (ctx instanceof EPPParser.ExprPrimariaContext) {
+            EPPParser.ExprPrimariaContext primCtx = (EPPParser.ExprPrimariaContext) ctx;
+            EPPParser.ExpresionPrimariaContext primaria = primCtx.expresionPrimaria();
+            if (primaria instanceof EPPParser.ExprNumeroContext) {
+                EPPParser.ExprNumeroContext numCtx = (EPPParser.ExprNumeroContext) primaria;
+                String numText = numCtx.NUM().getText();
+                try {
+                    return Integer.parseInt(numText) == 0 || Double.parseDouble(numText) == 0.0;
+                } catch (NumberFormatException e) {
+                    return false;
+                }
+            }
+        }
+        return false;
     }
     
     // Visitores para expresiones aritméticas (usadas en bucles para)
@@ -332,10 +428,20 @@ public class EPPToJasminVisitor extends EPPParserBaseVisitor<String> {
     
     @Override
     public String visitExprAritMultDiv(EPPParser.ExprAritMultDivContext ctx) {
+        String op = ctx.operadorMultiplicativo().getText();
+        
+        // Verificar división/módulo por cero con literales
+        if (op.equals("/") || op.equals("%")) {
+            EPPParser.ExpresionAritmeticaContext divisor = ctx.expresionAritmetica(1);
+            if (isZeroLiteralExpresion(divisor)) {
+                String errorMsg = op.equals("/") ? "División por cero detectada" : "Módulo por cero detectado";
+                throw new RuntimeException("Error semántico: " + errorMsg + " en línea " + ctx.getStart().getLine());
+            }
+        }
+        
         visit(ctx.expresionAritmetica(0));
         visit(ctx.expresionAritmetica(1));
         
-        String op = ctx.operadorMultiplicativo().getText();
         switch (op) {
             case "*":
                 jasminCode.append("    imul\n");
@@ -350,6 +456,26 @@ public class EPPToJasminVisitor extends EPPParserBaseVisitor<String> {
         popStack(1);
         
         return "";
+    }
+    
+    /**
+     * Verifica si una expresión aritmética es el literal cero.
+     */
+    private boolean isZeroLiteralExpresion(EPPParser.ExpresionAritmeticaContext ctx) {
+        if (ctx instanceof EPPParser.ExprAritPrimariaContext) {
+            EPPParser.ExprAritPrimariaContext primCtx = (EPPParser.ExprAritPrimariaContext) ctx;
+            EPPParser.ExpresionAritmeticaPrimariaContext primaria = primCtx.expresionAritmeticaPrimaria();
+            if (primaria instanceof EPPParser.ExprAritNumeroContext) {
+                EPPParser.ExprAritNumeroContext numCtx = (EPPParser.ExprAritNumeroContext) primaria;
+                String numText = numCtx.NUM().getText();
+                try {
+                    return Integer.parseInt(numText) == 0 || Double.parseDouble(numText) == 0.0;
+                } catch (NumberFormatException e) {
+                    return false;
+                }
+            }
+        }
+        return false;
     }
     
     @Override
