@@ -1,10 +1,6 @@
-programa
+x = 10 ;P
+y = 20 ;P
 
-    x = 10
-    y = 20
-    
-    # ERROR: Usar variable antes de declararla
-    resultado = z + x + y
-    mostrar(resultado)
-
-fin
+# ERROR: Usar variable antes de declararla
+resultado = z + x + y ;P
+mostrar resultado ;P

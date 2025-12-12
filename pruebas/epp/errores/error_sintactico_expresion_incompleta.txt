@@ -1,7 +1,3 @@
-programa
-
-    # ERROR SINTÁCTICO: asignación sin expresión
-    x = 
-    mostrar(x)
-
-fin
+# ERROR SINTÁCTICO: asignación sin expresión
+x = ;P
+mostrar x ;P

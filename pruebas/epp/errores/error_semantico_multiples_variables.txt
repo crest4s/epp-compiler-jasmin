@@ -1,7 +1,5 @@
-programa
-
-    x = 5
-    y = 10
+x = 5 ;P
+y = 10 ;P
     
     # ERROR SEMÁNTICO: múltiples variables no declaradas
     resultado = a + b + c + x + y

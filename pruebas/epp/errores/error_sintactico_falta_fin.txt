@@ -1,5 +1,3 @@
-programa
-
-    # ERROR SINTÁCTICO: falta 'fin' al final del programa
-    x = 10
-    mostrar(x)
+# ERROR SINTÁCTICO: falta ;P al final de línea
+x = 10
+mostrar x ;P

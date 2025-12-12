@@ -46,6 +46,17 @@ public class EPPMain {
                 // Asumiendo que ahora usas .epp como extensión
                 baseName = baseName.substring(0, baseName.length() - 4);
             }
+            
+            // Sanitizar nombre de clase para Java (reemplazar caracteres no válidos)
+            baseName = baseName.replaceAll("[^a-zA-Z0-9_]", "_");
+            // Si empieza con número, agregar prefijo
+            if (baseName.length() > 0 && Character.isDigit(baseName.charAt(0))) {
+                baseName = "Programa_" + baseName;
+            }
+            // Si está vacío después de sanitizar, usar nombre por defecto
+            if (baseName.isEmpty()) {
+                baseName = "Programa";
+            }
 
             Path outputFile = inputFile.getParent().resolve(baseName + ".j");
 
