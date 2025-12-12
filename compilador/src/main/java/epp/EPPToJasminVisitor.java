@@ -386,15 +386,6 @@ public class EPPToJasminVisitor extends EPPParserBaseVisitor<String> {
     public String visitExprAritmeticaMultDiv(EPPParser.ExprAritmeticaMultDivContext ctx) {
         String op = ctx.operadorMultiplicativo().getText();
         
-        // Verificar división/módulo por cero con literales
-        if (op.equals("/") || op.equals("%")) {
-            EPPParser.ExpresionContext divisor = ctx.expresion(1);
-            if (isZeroLiteralExpresionGeneral(divisor)) {
-                String errorMsg = op.equals("/") ? "División por cero detectada" : "Módulo por cero detectado";
-                throw new RuntimeException("Error semántico: " + errorMsg + " en línea " + ctx.getStart().getLine());
-            }
-        }
-        
         visit(ctx.expresion(0));
         visit(ctx.expresion(1));
         
@@ -454,15 +445,6 @@ public class EPPToJasminVisitor extends EPPParserBaseVisitor<String> {
     @Override
     public String visitExprAritMultDiv(EPPParser.ExprAritMultDivContext ctx) {
         String op = ctx.operadorMultiplicativo().getText();
-        
-        // Verificar división/módulo por cero con literales
-        if (op.equals("/") || op.equals("%")) {
-            EPPParser.ExpresionAritmeticaContext divisor = ctx.expresionAritmetica(1);
-            if (isZeroLiteralExpresion(divisor)) {
-                String errorMsg = op.equals("/") ? "División por cero detectada" : "Módulo por cero detectado";
-                throw new RuntimeException("Error semántico: " + errorMsg + " en línea " + ctx.getStart().getLine());
-            }
-        }
         
         visit(ctx.expresionAritmetica(0));
         visit(ctx.expresionAritmetica(1));

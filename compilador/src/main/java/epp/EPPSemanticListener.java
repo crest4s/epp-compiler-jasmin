@@ -91,8 +91,64 @@ public class EPPSemanticListener extends EPPParserBaseListener {
     }
     
     // ===== DIVISIÓN POR CERO =====
-    // Nota: La detección de división por cero ahora se hace en el visitor
-    // para tener acceso completo al contexto de la expresión
+    
+    @Override
+    public void enterExprAritmeticaMultDiv(EPPParser.ExprAritmeticaMultDivContext ctx) {
+        String op = ctx.operadorMultiplicativo().getText();
+        if (op.equals("/") || op.equals("%")) {
+            EPPParser.ExpresionContext divisor = ctx.expresion(1);
+            if (isZeroLiteral(divisor)) {
+                String errorMsg = op.equals("/") ? "División por cero detectada" : "Módulo por cero detectado";
+                addError(ctx, errorMsg);
+            }
+        }
+    }
+    
+    @Override
+    public void enterExprAritMultDiv(EPPParser.ExprAritMultDivContext ctx) {
+        String op = ctx.operadorMultiplicativo().getText();
+        if (op.equals("/") || op.equals("%")) {
+            EPPParser.ExpresionAritmeticaContext divisor = ctx.expresionAritmetica(1);
+            if (isZeroLiteralArit(divisor)) {
+                String errorMsg = op.equals("/") ? "División por cero detectada" : "Módulo por cero detectado";
+                addError(ctx, errorMsg);
+            }
+        }
+    }
+    
+    private boolean isZeroLiteral(EPPParser.ExpresionContext ctx) {
+        if (ctx instanceof EPPParser.ExprPrimariaContext) {
+            EPPParser.ExprPrimariaContext primCtx = (EPPParser.ExprPrimariaContext) ctx;
+            EPPParser.ExpresionPrimariaContext primaria = primCtx.expresionPrimaria();
+            if (primaria instanceof EPPParser.ExprNumeroContext) {
+                EPPParser.ExprNumeroContext numCtx = (EPPParser.ExprNumeroContext) primaria;
+                String numText = numCtx.NUM().getText();
+                try {
+                    return Integer.parseInt(numText) == 0 || Double.parseDouble(numText) == 0.0;
+                } catch (NumberFormatException e) {
+                    return false;
+                }
+            }
+        }
+        return false;
+    }
+    
+    private boolean isZeroLiteralArit(EPPParser.ExpresionAritmeticaContext ctx) {
+        if (ctx instanceof EPPParser.ExprAritPrimariaContext) {
+            EPPParser.ExprAritPrimariaContext primCtx = (EPPParser.ExprAritPrimariaContext) ctx;
+            EPPParser.ExpresionAritmeticaPrimariaContext primaria = primCtx.expresionAritmeticaPrimaria();
+            if (primaria instanceof EPPParser.ExprAritNumeroContext) {
+                EPPParser.ExprAritNumeroContext numCtx = (EPPParser.ExprAritNumeroContext) primaria;
+                String numText = numCtx.NUM().getText();
+                try {
+                    return Integer.parseInt(numText) == 0 || Double.parseDouble(numText) == 0.0;
+                } catch (NumberFormatException e) {
+                    return false;
+                }
+            }
+        }
+        return false;
+    }
     
     /**
      * Imprime un resumen de errores para debugging.
