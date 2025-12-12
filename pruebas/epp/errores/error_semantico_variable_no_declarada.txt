@@ -1,0 +1,6 @@
+programa
+
+    # ERROR: Uso de variable no declarada
+    mostrar(x + 5)
+
+fin

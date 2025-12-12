@@ -53,8 +53,8 @@
                             <!-- Generar Visitors (para recorrer el AST) -->
                             <visitor>true</visitor>
                             
-                            <!-- NO generar Listeners (solo usamos Visitors) -->
-                            <listener>false</listener>
+                            <!-- Generar Listeners (necesarios para análisis semántico) -->
+                            <listener>true</listener>
                             
                             <!-- Directorio de entrada: donde están los .g4 -->
                             <sourceDirectory>${project.basedir}/src/main/antlr4</sourceDirectory>

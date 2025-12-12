@@ -4,7 +4,7 @@ import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.*;
 import java.io.*;
 import java.nio.file.*;
-import java.util.Scanner; // Importación necesaria
+import java.util.Scanner;
 
 /**
  * Compilador de E++ a código Jasmin.
@@ -73,9 +73,16 @@ public class EPPMain {
                 System.exit(1);
             }
 
-            // TODO: Integrar aquí la comprobación de errores semánticos (SymbolTable)
-            // Si hay errores semánticos, usar System.err.println(...) y System.exit(1)
+            // Análisis semántico
+            ParseTreeWalker walker = new ParseTreeWalker();
+            EPPSemanticListener semanticListener = new EPPSemanticListener();
+            walker.walk(semanticListener, tree);
 
+            if (semanticListener.hasErrors()) {
+                System.err.println("\nCompilación fallida: Se encontraron errores semánticos.");
+                semanticListener.printErrorSummary();
+                System.exit(1);
+            }
 
             // Generación de código
             EPPToJasminVisitor visitor = new EPPToJasminVisitor(baseName);

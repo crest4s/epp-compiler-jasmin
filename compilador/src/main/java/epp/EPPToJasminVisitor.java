@@ -375,11 +375,20 @@ public class EPPToJasminVisitor extends EPPParserBaseVisitor<String> {
     @Override
     public String visitLeer(EPPParser.LeerContext ctx) {
         String varName = ctx.VARIABLE().getText();
-        SymbolTable.Variable var = symbolTable.declareVariable(varName, SymbolTable.VarType.UNKNOWN);
+        SymbolTable.Variable var = symbolTable.declareVariable(varName, SymbolTable.VarType.INT);
         
-        // TODO: Implementar lectura de entrada
-        // Por ahora, simplemente asignamos 0
-        jasminCode.append("    iconst_0\n");
+        // Crear un Scanner para leer desde System.in
+        jasminCode.append("    ; Leer entrada del usuario\n");
+        jasminCode.append("    new java/util/Scanner\n");
+        pushStack(1);
+        jasminCode.append("    dup\n");
+        pushStack(1);
+        jasminCode.append("    getstatic java/lang/System/in Ljava/io/InputStream;\n");
+        pushStack(1);
+        jasminCode.append("    invokespecial java/util/Scanner/<init>(Ljava/io/InputStream;)V\n");
+        popStack(2);
+        jasminCode.append("    invokevirtual java/util/Scanner/nextInt()I\n");
+        popStack(1);
         pushStack(1);
         jasminCode.append("    istore_").append(var.localIndex).append("\n");
         popStack(1);

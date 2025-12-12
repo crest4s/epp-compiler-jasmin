@@ -1,0 +1,7 @@
+programa
+
+    # ERROR SINTÁCTICO: paréntesis sin cerrar
+    resultado = (10 + 20
+    mostrar(resultado)
+
+fin

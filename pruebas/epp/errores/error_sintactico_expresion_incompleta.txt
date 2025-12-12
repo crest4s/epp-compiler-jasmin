@@ -1,0 +1,7 @@
+programa
+
+    # ERROR SINTÁCTICO: asignación sin expresión
+    x = 
+    mostrar(x)
+
+fin

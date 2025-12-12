@@ -1,0 +1,7 @@
+programa
+
+    # ERROR LÉXICO: carácter no válido @
+    x = 10 @ 5
+    mostrar(x)
+
+fin

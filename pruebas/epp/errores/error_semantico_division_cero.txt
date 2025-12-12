@@ -1,0 +1,7 @@
+programa
+
+    # ERROR: División por cero literal
+    resultado = 100 / 0
+    mostrar(resultado)
+
+fin

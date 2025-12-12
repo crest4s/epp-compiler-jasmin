@@ -1,0 +1,10 @@
+programa
+
+    x = 5
+    y = 10
+    
+    # ERROR SEMÁNTICO: múltiples variables no declaradas
+    resultado = a + b + c + x + y
+    mostrar(resultado)
+
+fin

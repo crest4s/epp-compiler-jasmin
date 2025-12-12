@@ -1,0 +1,10 @@
+programa
+
+    x = 10
+    y = 20
+    
+    # ERROR: Usar variable antes de declararla
+    resultado = z + x + y
+    mostrar(resultado)
+
+fin
