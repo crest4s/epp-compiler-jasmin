@@ -21,7 +21,7 @@ public class CSVSemanticListener extends CSVParserBaseListener {
 
     /** Devuelve la lista de mensajes de error acumulados. */
     public List<String> getErrorMessages() {
-        return errorList;
+        return errorList; // usado por csvmain para obtener todos loso errores
     }
 
     private void logError(int linea, String message) {
@@ -45,7 +45,8 @@ public class CSVSemanticListener extends CSVParserBaseListener {
 
         for (CSVParser.CampoContext campo : ctx.campo()) {
             String text = campo.getText();
-            if (text.startsWith("\"") && text.endsWith("\"")) {
+            // Limpiar campos entrecomillados
+            if (text.startsWith("\"") && text.endsWith("\"")) { 
                 text = text.substring(1, text.length() - 1).replace("\"\"", "\"");
             }
             row.add(text.trim());

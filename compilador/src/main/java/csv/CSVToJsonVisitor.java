@@ -69,15 +69,16 @@ public class CSVToJsonVisitor extends CSVParserBaseVisitor<String> {
             Map<String, String> record = records.get(i);
             int fieldCount = 0;
             
+            // Agregar cada campo del registro
             for (Map.Entry<String, String> entry : record.entrySet()) {
                 json.append("    \"")
-                    .append(escapeJSON(entry.getKey()))
+                    .append(escapeJSON(entry.getKey())) //Clave del campo
                     .append("\": \"")
-                    .append(escapeJSON(entry.getValue()))
+                    .append(escapeJSON(entry.getValue())) //Valor del campo
                     .append("\"");
                 
                 if (fieldCount < record.size() - 1) {
-                    json.append(",");
+                    json.append(","); //coma entre campos
                 }
                 json.append("\n");
                 fieldCount++;
@@ -85,7 +86,7 @@ public class CSVToJsonVisitor extends CSVParserBaseVisitor<String> {
             
             json.append("  }");
             if (i < records.size() - 1) {
-                json.append(",");
+                json.append(","); //coma entre registros
             }
             json.append("\n");
         }
@@ -96,10 +97,10 @@ public class CSVToJsonVisitor extends CSVParserBaseVisitor<String> {
     
     // Escapa caracteres especiales para JSON válido
     private String escapeJSON(String text) {
-        return text.replace("\\", "\\\\")
-                   .replace("\"", "\\\"")
-                   .replace("\n", "\\n")
-                   .replace("\r", "\\r")
-                   .replace("\t", "\\t");
+        return text.replace("\\", "\\\\") // Primero escapar la barra invertida
+                   .replace("\"", "\\\"") // Luego escapar las comillas
+                   .replace("\n", "\\n") // Reemplazar nueva línea
+                   .replace("\r", "\\r") // Reemplazar retorno 
+                   .replace("\t", "\\t"); // Reemplazar tabulación
     }
 }

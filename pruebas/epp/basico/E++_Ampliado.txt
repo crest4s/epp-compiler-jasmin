@@ -40,6 +40,6 @@ no ->
 terminar
 
 # Operacion final extendida: Division y parentesis
-asignar resultado = (100 / 2) + i;P
+asignar resultado = (100 / 2) + "i";P
 mostrar "Resultado final (100/2 + contador): ";P
 mostrar resultado;P

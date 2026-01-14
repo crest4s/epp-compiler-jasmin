@@ -56,7 +56,7 @@ public class CSVMain {
                 for (String error : errors) {
                     System.err.println("  " + error);
                 }
-                System.exit(1);
+                System.exit(1); // Salir con código de error
             }
 
             System.out.println("[INFO] Análisis semántico completado sin errores.");
