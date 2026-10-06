@@ -74,3 +74,7 @@ The scripts in `scripts/` automate the three steps for every test case. They use
 - Adrián Morales Rodríguez ([@crest4s](https://github.com/crest4s))
 - [@aliciasiguenza](https://github.com/aliciasiguenza)
 - [@avuren13](https://github.com/avuren13)
+
+## License
+
+[MIT](LICENSE)
